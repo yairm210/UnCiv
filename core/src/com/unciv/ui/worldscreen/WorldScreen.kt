@@ -13,8 +13,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.utils.Align
 import com.unciv.Constants
 import com.unciv.UncivGame
+import com.unciv.logic.GameInfo
 import com.unciv.logic.GameSaver
 import com.unciv.logic.civilization.CivilizationInfo
+import com.unciv.logic.civilization.PlayerType
 import com.unciv.logic.civilization.diplomacy.DiplomaticStatus
 import com.unciv.logic.map.MapGenerator
 import com.unciv.logic.map.MapParameters
@@ -538,20 +540,26 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
     }
 }
 
+
+
 class TotemWorldScreen : CameraStageBaseScreen(){
     val tileMap = MapGenerator().generateMap(MapParameters(),RulesetCache.getBaseRuleset())
     val tileSetStrings = TileSetStrings()
     val tileMapHolder = TileGroupMap(tileMap.values.map { TileGroup(it,tileSetStrings) },500f)
-    val newCiv = CivilizationInfo("Test")
+    val newCiv = CivilizationInfo("Babylon")
     init{
+        newCiv.playerType=PlayerType.Human
+        val gameInfo = GameInfo()
+        gameInfo.tileMap = tileMap
+        gameInfo.civilizations.add(newCiv)
+        gameInfo.setTransients()
         ImageGetter.ruleset = RulesetCache.getBaseRuleset()
         val scrollPane = ScrollPane(tileMapHolder)
         scrollPane.setSize(stage.width,stage.height)
         scrollPane.center(stage)
         scrollPane.scrollPercentX=0.5f
         scrollPane.scrollPercentY=0.5f
-        stage.addActor(scrollPane )
-        tileMap.placeUnitNearTile("")
+        stage.addActor(scrollPane)
         newCiv.placeUnitNearTile(Vector2.Zero, Constants.worker)
         update()
     }
