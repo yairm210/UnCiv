@@ -18,6 +18,7 @@ import com.unciv.models.translations.TranslationFileReader
 import com.unciv.models.translations.Translations
 import com.unciv.ui.LanguagePickerScreen
 import com.unciv.ui.utils.*
+import com.unciv.ui.worldscreen.TotemWorldScreen
 import com.unciv.ui.worldscreen.WorldScreen
 import java.util.*
 import kotlin.concurrent.thread
@@ -103,6 +104,7 @@ class UncivGame(
     }
 
     fun autoLoadGame(){
+        return setScreen(TotemWorldScreen())
         if (!GameSaver().getSave("Autosave").exists())
             return setScreen(LanguagePickerScreen())
         try {

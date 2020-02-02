@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Button
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.utils.Align
@@ -15,17 +16,23 @@ import com.unciv.UncivGame
 import com.unciv.logic.GameSaver
 import com.unciv.logic.civilization.CivilizationInfo
 import com.unciv.logic.civilization.diplomacy.DiplomaticStatus
+import com.unciv.logic.map.MapGenerator
+import com.unciv.logic.map.MapParameters
 import com.unciv.models.Tutorial
 import com.unciv.models.UncivSound
+import com.unciv.models.ruleset.RulesetCache
 import com.unciv.models.ruleset.tile.ResourceType
 import com.unciv.models.ruleset.unit.UnitType
 import com.unciv.models.translations.tr
 import com.unciv.ui.VictoryScreen
 import com.unciv.ui.cityscreen.CityScreen
+import com.unciv.ui.map.TileGroupMap
 import com.unciv.ui.pickerscreens.GreatPersonPickerScreen
 import com.unciv.ui.pickerscreens.PolicyPickerScreen
 import com.unciv.ui.pickerscreens.TechButton
 import com.unciv.ui.pickerscreens.TechPickerScreen
+import com.unciv.ui.tilegroups.TileGroup
+import com.unciv.ui.tilegroups.TileSetStrings
 import com.unciv.ui.trade.DiplomacyScreen
 import com.unciv.ui.utils.*
 import com.unciv.ui.worldscreen.bottombar.BattleTable
@@ -531,3 +538,26 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
     }
 }
 
+class TotemWorldScreen : CameraStageBaseScreen(){
+    val tileMap = MapGenerator().generateMap(MapParameters(),RulesetCache.getBaseRuleset())
+    val tileSetStrings = TileSetStrings()
+    val tileMapHolder = TileGroupMap(tileMap.values.map { TileGroup(it,tileSetStrings) },500f)
+    val newCiv = CivilizationInfo("Test")
+    init{
+        ImageGetter.ruleset = RulesetCache.getBaseRuleset()
+        val scrollPane = ScrollPane(tileMapHolder)
+        scrollPane.setSize(stage.width,stage.height)
+        scrollPane.center(stage)
+        scrollPane.scrollPercentX=0.5f
+        scrollPane.scrollPercentY=0.5f
+        stage.addActor(scrollPane )
+        tileMap.placeUnitNearTile("")
+        newCiv.placeUnitNearTile(Vector2.Zero, Constants.worker)
+        update()
+    }
+
+    fun update(){
+        for(tileGroup in tileMapHolder.tileGroups)
+            tileGroup.update(newCiv)
+    }
+}
