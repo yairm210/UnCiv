@@ -26,8 +26,10 @@ class TileGroupIcons(val tileGroup: TileGroup){
         updateResourceIcon(showResourcesAndImprovements,viewingCiv)
         updateImprovementIcon(showResourcesAndImprovements)
 
-        civilianUnitIcon = newUnitIcon(tileGroup.tileInfo.civilianUnit, civilianUnitIcon, tileIsViewable, -20f)
-        militaryUnitIcon = newUnitIcon(tileGroup.tileInfo.militaryUnit, militaryUnitIcon, tileIsViewable && showMilitaryUnit, 20f)
+        civilianUnitIcon = newUnitIcon(tileGroup.tileInfo.civilianUnit, civilianUnitIcon,
+                tileIsViewable, -20f, viewingCiv)
+        militaryUnitIcon = newUnitIcon(tileGroup.tileInfo.militaryUnit, militaryUnitIcon,
+                tileIsViewable && showMilitaryUnit, 20f, viewingCiv)
     }
 
     fun addPopulationIcon() {
@@ -47,7 +49,7 @@ class TileGroupIcons(val tileGroup: TileGroup){
     }
 
 
-    fun newUnitIcon(unit: MapUnit?, oldUnitGroup: UnitGroup?, isViewable: Boolean, yFromCenter: Float): UnitGroup? {
+    fun newUnitIcon(unit: MapUnit?, oldUnitGroup: UnitGroup?, isViewable: Boolean, yFromCenter: Float, viewingCiv: CivilizationInfo?): UnitGroup? {
         var newImage: UnitGroup? = null
         // The unit can change within one update - for instance, when attacking, the attacker replaces the defender!
         oldUnitGroup?.remove()
@@ -81,7 +83,7 @@ class TileGroupIcons(val tileGroup: TileGroup){
 
             // Instead of fading out the entire unit with its background, we just fade out its central icon,
             // that way it remains much more visible on the map
-            if (!unit.isIdle() && unit.civInfo == UncivGame.Current.worldScreen.viewingCiv)
+            if (!unit.isIdle() && unit.civInfo == viewingCiv)
                 newImage.unitBaseImage.color.a = 0.5f
         }
         return newImage

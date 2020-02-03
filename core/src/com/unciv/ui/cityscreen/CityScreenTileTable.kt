@@ -32,7 +32,7 @@ class CityScreenTileTable(val city: CityInfo): Table(){
         val stats = selectedTile.getTileStats(city, city.civInfo)
         innerTable.pad(20f)
 
-        innerTable.add(selectedTile.toString().toLabel()).colspan(2)
+        innerTable.add(selectedTile.toString(city.civInfo).toLabel()).colspan(2)
         innerTable.row()
         innerTable.add(getTileStatsTable(stats)).row()
 

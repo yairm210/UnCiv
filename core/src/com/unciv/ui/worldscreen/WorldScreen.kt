@@ -20,6 +20,8 @@ import com.unciv.logic.civilization.PlayerType
 import com.unciv.logic.civilization.diplomacy.DiplomaticStatus
 import com.unciv.logic.map.MapGenerator
 import com.unciv.logic.map.MapParameters
+import com.unciv.logic.map.MapUnit
+import com.unciv.logic.map.TileInfo
 import com.unciv.models.Tutorial
 import com.unciv.models.UncivSound
 import com.unciv.models.ruleset.RulesetCache
@@ -54,7 +56,7 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
 
     private val topBar = WorldScreenTopBar(this)
     val bottomUnitTable = UnitTable(this)
-    val bottomTileInfoTable = TileInfoTable(this)
+    val bottomTileInfoTable = TileInfoTable(viewingCiv)
     val battleTable = BattleTable(this)
     val unitActionsTable = UnitActionsTable(this)
 
@@ -547,14 +549,33 @@ class TotemWorldScreen : CameraStageBaseScreen(){
     val tileSetStrings = TileSetStrings()
     val tileMapHolder = TileGroupMap(tileMap.values.map { TileGroup(it,tileSetStrings) },500f)
     val newCiv = CivilizationInfo("Babylon")
+    var selectedUnit : MapUnit? = null
+    val gameInfo = GameInfo()
+    val tileInfoTable = TileInfoTable(newCiv)
+    var selectedTile: TileInfo?=null
+
     init{
         newCiv.playerType=PlayerType.Human
-        val gameInfo = GameInfo()
         gameInfo.tileMap = tileMap
         gameInfo.civilizations.add(newCiv)
         gameInfo.setTransients()
         ImageGetter.ruleset = RulesetCache.getBaseRuleset()
         val scrollPane = ScrollPane(tileMapHolder)
+        for(tileGroup in tileMapHolder.tileGroups)
+            tileGroup.onClick {
+                val tileInfo = tileGroup.tileInfo
+                selectedTile=tileInfo
+                if(tileInfo.civilianUnit!=null){
+                    selectedUnit = tileInfo.civilianUnit
+                }
+
+                else if(selectedUnit!=null
+                        && selectedUnit!!.movement.getDistanceToTiles().containsKey(tileInfo)
+                        && selectedUnit!!.movement.canMoveTo(tileInfo)){
+                    selectedUnit!!.movement.moveToTile(tileInfo)
+                }
+                update()
+            }
         scrollPane.setSize(stage.width,stage.height)
         scrollPane.center(stage)
         scrollPane.scrollPercentX=0.5f
@@ -562,10 +583,27 @@ class TotemWorldScreen : CameraStageBaseScreen(){
         stage.addActor(scrollPane)
         newCiv.placeUnitNearTile(Vector2.Zero, Constants.worker)
         update()
+
+        stage.addActor(tileInfoTable)
     }
 
-    fun update(){
-        for(tileGroup in tileMapHolder.tileGroups)
+    fun update() {
+        if(newCiv.getIdleUnits().none()) gameInfo.nextTurn()
+        for (tileGroup in tileMapHolder.tileGroups) {
             tileGroup.update(newCiv)
+            tileGroup.hideCircle()
+            if (tileGroup.tileInfo.civilianUnit == selectedUnit) {
+                tileGroup.icons.civilianUnitIcon?.selectUnit()
+            }
+        }
+        if(selectedUnit!=null) {
+            for (tile in selectedUnit!!.movement.getDistanceToTiles().keys){
+                val tileGroup = tileMapHolder.tileGroups.first{it.tileInfo==tile}
+                tileGroup.showCircle(Color.WHITE)
+            }
+        }
+        if(selectedTile!=null) tileInfoTable.updateTileTable(selectedTile!!)
+        tileInfoTable.setPosition(stage.width,0f,Align.bottomRight)
+
     }
 }

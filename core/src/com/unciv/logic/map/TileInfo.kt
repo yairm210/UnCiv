@@ -288,10 +288,10 @@ open class TileInfo {
 
     fun isRoughTerrain() = getBaseTerrain().rough || getTerrainFeature()?.rough == true
 
-    override fun toString(): String {
+    fun toString(viewingCiv: CivilizationInfo): String {
         val lineList = ArrayList<String>() // more readable than StringBuilder, with same performance for our use-case
         val isViewableToPlayer = UncivGame.Current.viewEntireMapForDebug
-                || UncivGame.Current.gameInfo.getCurrentPlayerCivilization().viewableTiles.contains(this)
+                || viewingCiv.viewableTiles.contains(this)
 
         if (isCityCenter()) {
             val city = getCity()!!
