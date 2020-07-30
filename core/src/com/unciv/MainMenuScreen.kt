@@ -19,6 +19,7 @@ import com.unciv.ui.mapeditor.*
 import com.unciv.ui.newgamescreen.GameSetupInfo
 import com.unciv.ui.newgamescreen.NewGameScreen
 import com.unciv.ui.saves.LoadGameScreen
+import com.unciv.ui.saves.LoadReplayScreen
 import com.unciv.ui.utils.*
 import kotlin.concurrent.thread
 
@@ -95,6 +96,11 @@ class MainMenuScreen: CameraStageBaseScreen() {
             { game.setScreen(MultiplayerScreen(this)) }
         table.add(multiplayerTable).row()
 
+        if (GameSaver.getReplays(false).any() && UncivGame.Current.replayDebugSwitch) {
+            val loadReplayTable = getTableBlock("Load replay", "OtherIcons/Load")
+                { game.setScreen(LoadReplayScreen(this)) }
+            table.add(loadReplayTable).row()
+        }
         val mapEditorScreenTable = getTableBlock("Map editor", "OtherIcons/MapEditor")
             { if(stage.actors.none { it is MapEditorMainScreenPopup }) MapEditorMainScreenPopup(this) }
         table.add(mapEditorScreenTable).padBottom(0f)

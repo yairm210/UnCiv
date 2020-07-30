@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Array
+import com.unciv.UncivGame
 import com.unciv.logic.civilization.PlayerType
 import com.unciv.models.UncivSound
 import com.unciv.models.translations.TranslationFileWriter
@@ -112,6 +113,9 @@ class WorldScreenOptionsPopup(val worldScreen:WorldScreen) : Popup(worldScreen) 
         addYesNoRow ("Order trade offers by amount", settings.orderTradeOffersByAmount) { settings.orderTradeOffersByAmount = it }
 
         addAutosaveTurnsSelectBox()
+
+        if (UncivGame.Current.replayDebugSwitch)
+            addYesNoRow ("Autosave replays", settings.autoSaveReplay) { settings.autoSaveReplay = it }
 
         // at the moment the notification service only exists on Android
         addNotificationOptions()

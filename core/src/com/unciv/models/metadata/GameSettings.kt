@@ -19,6 +19,7 @@ class GameSettings {
     var soundEffectsVolume = 0.5f
     var musicVolume = 0.5f
     var turnsBetweenAutosaves = 1
+    var autoSaveReplay = false
     var tileSet:String = "FantasyHex"
     var showTutorials: Boolean = true
     var autoAssignCityProduction: Boolean = true

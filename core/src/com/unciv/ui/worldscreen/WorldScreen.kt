@@ -17,6 +17,7 @@ import com.unciv.Constants
 import com.unciv.logic.GameSaver
 import com.unciv.logic.civilization.CivilizationInfo
 import com.unciv.logic.civilization.diplomacy.DiplomaticStatus
+import com.unciv.logic.replay.ActionMapper
 import com.unciv.models.Tutorial
 import com.unciv.models.UncivSound
 import com.unciv.models.ruleset.tile.ResourceType
@@ -40,9 +41,10 @@ import kotlin.concurrent.thread
 
 class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
     val gameInfo = game.gameInfo
+    val replayMode = gameInfo.replayMode
     var isPlayersTurn = viewingCiv == gameInfo.currentPlayerCiv // todo this should be updated when passing turns
     var selectedCiv = viewingCiv // Selected civilization, used only in spectator mode
-    val canChangeState = isPlayersTurn && !viewingCiv.isSpectator()
+    val canChangeState = isPlayersTurn && !gameInfo.currentPlayerCiv.isSpectator() && !replayMode
     private var waitingForAutosave = false
 
     val mapHolder = WorldMapHolder(this, gameInfo.tileMap)
@@ -63,7 +65,6 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
 
     private val notificationsScroll: NotificationsScroll
     var shouldUpdate = false
-
 
     private var backButtonListener : InputListener
 
@@ -126,10 +127,7 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
                 }
 
         // Don't select unit and change selectedCiv when centering as spectator
-        if (viewingCiv.isSpectator())
-            mapHolder.setCenterPosition(tileToCenterOn,true, false)
-        else
-            mapHolder.setCenterPosition(tileToCenterOn,true, true)
+        mapHolder.setCenterPosition(tileToCenterOn,true, !viewingCiv.isSpectator())
 
 
         if(gameInfo.gameParameters.isOnlineMultiplayer && !gameInfo.isUpToDate)
@@ -319,8 +317,15 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
 
         if (!hasOpenPopups() && isPlayersTurn) {
             when {
-                !gameInfo.oneMoreTurnMode && (viewingCiv.isDefeated() || gameInfo.civilizations.any { it.victoryManager.hasWon() }) ->
+                !gameInfo.oneMoreTurnMode
+                        && (viewingCiv.isDefeated() || gameInfo.civilizations.any { it.victoryManager.hasWon() }) -> {
                     game.setScreen(VictoryScreen(this))
+                    if (game.settings.autoSaveReplay && game.replayDebugSwitch) {
+                        gameInfo.replay!!.finalState = gameInfo
+                        GameSaver.saveReplay(gameInfo.replay!!, "LastReplay")
+                    }
+                }
+
                 viewingCiv.greatPeople.freeGreatPeople > 0 -> game.setScreen(GreatPersonPickerScreen(viewingCiv))
                 viewingCiv.popupAlerts.any() -> AlertPopup(this, viewingCiv.popupAlerts.first()).open()
                 viewingCiv.tradeRequests.isNotEmpty() -> TradePopup(this).open()
@@ -564,6 +569,10 @@ class WorldScreen(val viewingCiv:CivilizationInfo) : CameraStageBaseScreen() {
 
     private fun getNextTurnAction(): NextTurnAction {
         return when {
+            replayMode && gameInfo.oneMoreTurnMode -> NextTurnAction("Replay finished", Color.GRAY) {}
+
+            !canChangeState -> NextTurnAction("Next turn", Color.WHITE) { nextTurn() }
+
             !isPlayersTurn -> NextTurnAction("Waiting for other players...", Color.GRAY) {}
 
             viewingCiv.shouldGoToDueUnit() ->

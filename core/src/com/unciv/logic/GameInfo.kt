@@ -8,6 +8,8 @@ import com.unciv.logic.city.CityConstructions
 import com.unciv.logic.civilization.*
 import com.unciv.logic.map.TileInfo
 import com.unciv.logic.map.TileMap
+import com.unciv.logic.replay.NextTurnReplay
+import com.unciv.logic.replay.Replay
 import com.unciv.logic.trade.TradeOffer
 import com.unciv.logic.trade.TradeType
 import com.unciv.models.metadata.GameParameters
@@ -26,6 +28,7 @@ class GameInfo {
      * that is inconsistent with the saved game on the cloud */
     @Transient var isUpToDate=false
     @Transient lateinit var ruleSet:Ruleset
+    @Transient var replay: Replay? = null
 
     var civilizations = mutableListOf<CivilizationInfo>()
     var difficulty="Chieftain" // difficulty is game-wide, think what would happen if 2 human players could play on different difficulties?
@@ -33,6 +36,7 @@ class GameInfo {
     var gameParameters= GameParameters()
     var turns = 0
     var oneMoreTurnMode=false
+    var replayMode=false
     var currentPlayer=""
     var gameId = UUID.randomUUID().toString() // random string
 
@@ -48,6 +52,7 @@ class GameInfo {
     fun clone(): GameInfo {
         val toReturn = GameInfo()
         toReturn.tileMap = tileMap.clone()
+        toReturn.replay = replay
         toReturn.civilizations.addAll(civilizations.map { it.clone() })
         toReturn.currentPlayer=currentPlayer
         toReturn.turns = turns
@@ -55,6 +60,7 @@ class GameInfo {
         toReturn.gameParameters = gameParameters
         toReturn.gameId = gameId
         toReturn.oneMoreTurnMode = oneMoreTurnMode
+        toReturn.replayMode = replayMode
         return toReturn
     }
 
@@ -77,43 +83,55 @@ class GameInfo {
         var thisPlayer = previousHumanPlayer // not calling is currentPlayer because that's alreay taken and I can't think of a better name
         var currentPlayerIndex = civilizations.indexOf(thisPlayer)
 
-
         fun switchTurn(){
             thisPlayer.endTurn()
+
             currentPlayerIndex = (currentPlayerIndex+1) % civilizations.size
-            if(currentPlayerIndex==0){
-                turns++
-            }
+            if(currentPlayerIndex==0) turns++
+
             thisPlayer = civilizations[currentPlayerIndex]
             thisPlayer.startTurn()
         }
 
         switchTurn()
 
-        while (thisPlayer.playerType == PlayerType.AI
-            || turns < UncivGame.Current.simulateUntilTurnForDebug
-                || (turns < simulateMaxTurns && simulateUntilWin)
-                // For multiplayer, if there are 3+ players and one is defeated or spectator,
-                // we'll want to skip over their turn
-                || ((thisPlayer.isDefeated() || thisPlayer.isSpectator()) && gameParameters.isOnlineMultiplayer)
-        ) {
-            if (!thisPlayer.isDefeated() || thisPlayer.isBarbarian()) {
-                NextTurnAutomation.automateCivMoves(thisPlayer)
-
-                // Placing barbarians after their turn
-                if (thisPlayer.isBarbarian()
-                        && !gameParameters.noBarbarians
-                        && turns % 10 == 0) placeBarbarians()
-
-                // exit simulation mode when player wins
-                if (thisPlayer.victoryManager.hasWon() && simulateUntilWin) {
-                    // stop simulation
-                    simulateUntilWin = false
-                    break
-                }
+        fun replayTurn(){
+            thisPlayer.popupAlerts.clear()
+            while (!thisPlayer.isSpectator()) {
+                NextTurnReplay.replayCivMoves(thisPlayer, turns)
+                switchTurn()
             }
-            switchTurn()
         }
+
+        fun automateTurn(){
+            while (thisPlayer.playerType == PlayerType.AI
+                    || turns < UncivGame.Current.simulateUntilTurnForDebug
+                    || (turns < simulateMaxTurns && simulateUntilWin)
+                    // For multiplayer, if there are 3+ players and one is defeated or spectator,
+                    // we'll want to skip over their turn
+                    || ((thisPlayer.isDefeated() || thisPlayer.isSpectator()) && gameParameters.isOnlineMultiplayer)
+            ) {
+                if (!thisPlayer.isDefeated() || thisPlayer.isBarbarian()) {
+                    NextTurnAutomation.automateCivMoves(thisPlayer)
+
+                    // Placing barbarians after their turn
+                    if (thisPlayer.isBarbarian()
+                            && !gameParameters.noBarbarians
+                            && turns % 10 == 0) placeBarbarians()
+
+                    // exit simulation mode when player wins
+                    if (thisPlayer.victoryManager.hasWon() && simulateUntilWin) {
+                        // stop simulation
+                        simulateUntilWin = false
+                        break
+                    }
+                }
+                switchTurn()
+            }
+        }
+
+        if (replayMode) replayTurn()
+        else automateTurn()
 
         currentPlayer = thisPlayer.civName
         currentPlayerCiv = getCivilization(currentPlayer)
@@ -237,6 +255,7 @@ class GameInfo {
     // will be done here, and not in CivInfo.setTransients or CityInfo
     fun setTransients() {
         tileMap.gameInfo = this
+        replay?.gameInfo = this
         ruleSet = RulesetCache.getComplexRuleset(gameParameters)
         // any mod the saved game lists that is currently not installed causes null pointer
         // exceptions in this routine unless it contained no new objects or was very simple.

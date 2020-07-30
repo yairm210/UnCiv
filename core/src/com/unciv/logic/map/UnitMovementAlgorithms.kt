@@ -2,8 +2,12 @@ package com.unciv.logic.map
 
 import com.badlogic.gdx.math.Vector2
 import com.unciv.Constants
+import com.unciv.UncivGame
 import com.unciv.UniqueAbility
 import com.unciv.logic.civilization.CivilizationInfo
+import com.unciv.logic.replay.Action
+import com.unciv.logic.replay.ActionType
+import com.unciv.logic.replay.MovementData
 
 class UnitMovementAlgorithms(val unit:MapUnit) {
 
@@ -229,14 +233,24 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
     }
 
 
-    fun moveToTile(destination: TileInfo) {
+    fun moveToTile(destination: TileInfo, savedPath: List<Vector2>? = null) {
         if (destination == unit.getTile()) return // already here!
 
         class CantEnterThisTileException(msg: String) : Exception(msg)
         if (!canMoveTo(destination))
             throw CantEnterThisTileException("$unit can't enter $destination")
 
+        val gameInfo = unit.currentTile.tileMap.gameInfo
+        val unitId = unit.getUnitId()
+
         if (unit.type.isAirUnit()) { // they move differently from all other units
+            // save movement data to replay
+            if (UncivGame.Current.replayDebugSwitch && !gameInfo.replayMode) {
+                val data = MovementData(unitId, destination.position)
+                val action = Action(ActionType.Move, data)
+                gameInfo.replay?.saveAction(unit.civInfo, action)
+            }
+
             unit.action = null
             unit.removeFromTile()
             unit.isTransported = false // it has left the carrier by own means
@@ -284,11 +298,20 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
         // If you're going to (or past) a ruin, and you activate the ruin bonus, and A UNIT spawns.
         // That unit could now be blocking your entrance to the destination, so the putInTile would fail! =0
         // Instead, we move you to the destination directly, and only afterwards activate the various tiles on the way.
-        val pathToFinalTile = distanceToTiles.getPathToTile(destination)
+        val pathToFinalTile = if (gameInfo.replayMode) savedPath!!.map { unit.currentTile.tileMap[it] }
+        else distanceToTiles.getPathToTile(destination)
+
         for (tile in pathToFinalTile) {
             unit.moveThroughTile(tile)
         }
 
+        // save movement data to replay
+        if (UncivGame.Current.replayDebugSwitch && !gameInfo.replayMode) {
+            val path = pathToFinalTile.map { it.position }
+            val data = MovementData(unitId, destination.position, path = path)
+            val action = Action(ActionType.Move, data)
+            gameInfo.replay?.saveAction(unit.civInfo, action)
+        }
     }
 
 

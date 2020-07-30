@@ -1,5 +1,6 @@
 package com.unciv.logic
 
+import com.badlogic.gdx.maps.Map
 import com.badlogic.gdx.math.Vector2
 import com.unciv.Constants
 import com.unciv.logic.civilization.CivilizationInfo
@@ -21,12 +22,7 @@ object GameStarter {
         gameInfo.gameParameters = gameSetupInfo.gameParameters
         val ruleset = RulesetCache.getComplexRuleset(gameInfo.gameParameters)
 
-        if (gameSetupInfo.mapParameters.type == MapType.scenario)
-            gameInfo.tileMap = MapSaver.loadScenario(gameSetupInfo.mapParameters.name).tileMap
-        else if (gameSetupInfo.mapParameters.name != "")
-            gameInfo.tileMap = MapSaver.loadMap(gameSetupInfo.mapParameters.name)
-        else gameInfo.tileMap = MapGenerator(ruleset).generateMap(gameSetupInfo.mapParameters)
-        gameInfo.tileMap.mapParameters = gameSetupInfo.mapParameters
+        addTileMap(gameSetupInfo.mapParameters, gameInfo, ruleset)
 
         gameInfo.tileMap.gameInfo = gameInfo // need to set this transient before placing units in the map
         addCivilizations(gameSetupInfo.gameParameters, gameInfo, ruleset) // this is before gameInfo.setTransients, so gameInfo doesn't yet have the gameBasics
@@ -70,6 +66,15 @@ object GameStarter {
         addCivStartingUnits(gameInfo)
 
         return gameInfo
+    }
+
+    private fun addTileMap(mapParameters: MapParameters, gameInfo: GameInfo, ruleset: Ruleset) {
+        when (mapParameters.type) {
+            MapType.scenario -> gameInfo.tileMap = MapSaver.loadScenario(mapParameters.name).tileMap
+            MapType.custom -> gameInfo.tileMap = MapSaver.loadMap(mapParameters.name)
+            else -> gameInfo.tileMap = MapGenerator(ruleset).generateMap(mapParameters)
+        }
+        gameInfo.tileMap.mapParameters = mapParameters
     }
 
     private fun addCivilizations(newGameParameters: GameParameters, gameInfo: GameInfo, ruleset: Ruleset) {

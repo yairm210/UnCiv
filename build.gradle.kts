@@ -21,7 +21,7 @@ buildscript {
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${com.unciv.build.BuildConfig.kotlinVersion}")
         classpath("de.richsource.gradle.plugins:gwt-gradle-plugin:0.6")
-        classpath("com.android.tools.build:gradle:4.0.0")
+        classpath("com.android.tools.build:gradle:4.0.1")
         classpath("com.mobidevelop.robovm:robovm-gradle-plugin:2.3.1")
 
         // This is for wrapping the .jar file into a standalone executable

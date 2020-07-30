@@ -9,7 +9,13 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.utils.Align
 import com.unciv.logic.GameInfo
 import com.unciv.logic.GameSaver
+import com.unciv.logic.civilization.CivilizationInfo
+import com.unciv.logic.civilization.PlayerType
+import com.unciv.logic.replay.ActionMapper
+import com.unciv.logic.replay.NextTurnReplay
+import com.unciv.logic.replay.Replay
 import com.unciv.models.metadata.GameSettings
+import com.unciv.models.metadata.Player
 import com.unciv.models.ruleset.RulesetCache
 import com.unciv.models.translations.Translations
 import com.unciv.ui.LanguagePickerScreen
@@ -47,9 +53,12 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
      */
     val simulateUntilTurnForDebug: Int = 0
 
-    /** Console log battles
+    /** Toggles console battle log
      */
     val alertBattle = false
+    /** Debug new replay functionality
+     */
+    val replayDebugSwitch = false
 
     lateinit var worldScreen: WorldScreen
 
@@ -110,8 +119,15 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
     }
 
 
-    fun loadGame(gameInfo: GameInfo) {
+    fun loadGame(gameInfo: GameInfo, replay: Replay? = null) {
         this.gameInfo = gameInfo
+
+        if (replayDebugSwitch && replay != null) {
+            this.gameInfo.replay = replay
+            this.gameInfo.replayMode = true
+        } else if (replayDebugSwitch)
+            this.gameInfo.replay = Replay(gameInfo)
+
         ImageGetter.ruleset = gameInfo.ruleSet
         Gdx.input.inputProcessor = null // Since we will set the world screen when we're ready,
                                         // This is to avoid ANRs when loading.
@@ -122,6 +138,36 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
 
     fun loadGame(gameName: String) {
         loadGame(GameSaver.loadGameByName(gameName))
+    }
+
+    fun loadReplay(replayName: String) {
+        val replay = GameSaver.loadReplayByName(replayName)
+        val newGame = replay.initialState
+
+        fun setFirstSpectator() {
+            var spectator = newGame.gameParameters.players.find { it.chosenCiv == Constants.spectator }
+
+            if (spectator != null) {
+                newGame.gameParameters.players.remove(spectator)
+                newGame.civilizations.remove(newGame.civilizations.find { it.isSpectator() })
+            }
+
+            spectator = Player(Constants.spectator).apply { playerType = PlayerType.Human }
+            newGame.gameParameters.players.add(0, spectator)
+
+            val spectatorCiv = CivilizationInfo(Constants.spectator)
+            spectatorCiv.playerType = PlayerType.Human
+
+            newGame.civilizations.add(0, spectatorCiv)
+            newGame.currentPlayer = Constants.spectator
+        }
+
+        setFirstSpectator()
+
+        newGame.setTransients()
+        NextTurnReplay.replay = replay
+        NextTurnReplay.replay.gameInfo = newGame
+        loadGame(newGame, replay)
     }
 
     fun startMusic() {

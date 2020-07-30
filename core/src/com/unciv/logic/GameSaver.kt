@@ -5,12 +5,16 @@ import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.utils.Json
 import com.unciv.UncivGame
 import com.unciv.logic.civilization.CivilizationInfo
+import com.unciv.logic.map.Scenario
+import com.unciv.logic.replay.Replay
 import com.unciv.models.metadata.GameSettings
+import com.unciv.ui.saves.Gzip
 import com.unciv.ui.utils.ImageGetter
 import java.io.File
 import kotlin.concurrent.thread
 
 object GameSaver {
+    private const val replaysFolder = "replays"
     private const val saveFilesFolder = "SaveFiles"
     private const val multiplayerFilesFolder = "MultiplayerGames"
     private const val settingsFileName = "GameSettings.json"
@@ -20,9 +24,38 @@ object GameSaver {
     var externalFilesDirForAndroid = ""
 
     fun json() = Json().apply { setIgnoreDeprecated(true); ignoreUnknownFields = true } // Json() is NOT THREAD SAFE so we need to create a new one for each function
+    
+
+    fun getReplay(replayName: String, consoleMode: Boolean = false): FileHandle {
+        val replayFile = if (consoleMode) FileHandle("$replaysFolder/$replayName")
+        else Gdx.files.local("$replaysFolder/$replayName")
+        return replayFile
+    }
+    
+    fun getReplays(consoleMode: Boolean = false): Sequence<String> {
+        val replays = if (consoleMode) FileHandle("$replaysFolder").list().asSequence().map { it.name() }
+        else Gdx.files.local("$replaysFolder").list().asSequence().map { it.name() }
+        return replays
+    }
+    
+    fun saveReplay(replay: Replay, replayName: String, consoleMode: Boolean = false) {
+        getReplay(replayName, consoleMode).writeString(Gzip.zip(json().toJson(replay)), false)
+    }
+
+    fun deleteReplay(replayName: String){
+        getReplay(replayName).delete()
+    }
+
+    fun loadReplayByName(replayName: String, consoleMode: Boolean = false): Replay {
+        val gzippedString = getReplay(replayName, consoleMode).readString()
+        val unzippedJson = Gzip.unzip(gzippedString)
+        val replay = json().fromJson(Replay::class.java, unzippedJson)
+        replay.initialState.setTransients()
+        return replay
+    }
 
     fun getSubfolder(multiplayer: Boolean=false) = if(multiplayer) multiplayerFilesFolder else saveFilesFolder
-
+    
     fun getSave(GameName: String, multiplayer: Boolean = false): FileHandle {
         val localfile = Gdx.files.local("${getSubfolder(multiplayer)}/$GameName")
         if (externalFilesDirForAndroid == "" || !Gdx.files.isExternalStorageAvailable) return localfile
@@ -30,7 +63,7 @@ object GameSaver {
         if (localfile.exists() && !externalFile.exists()) return localfile
         return externalFile
     }
-
+    
     fun getSaves(multiplayer: Boolean = false): Sequence<String> {
         val localSaves = Gdx.files.local(getSubfolder(multiplayer)).list().asSequence().map { it.name() }
         if (externalFilesDirForAndroid == "" || !Gdx.files.isExternalStorageAvailable) return localSaves
