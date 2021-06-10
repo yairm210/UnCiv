@@ -42,14 +42,12 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 
 * [Catapult](https://thenounproject.com/search/?q=Spear&i=1233840) By Jakub Ukrop
 * [Unloaded Crossbow](https://thenounproject.com/term/unloaded-crossbow/815992/) By Hamish as Ballista
-* [Bow and arrow](https://thenounproject.com/term/bow-and-arrow/3929618/) By Lars Meiertoberens for Composite Bowman
 * [Sword](https://thenounproject.com/search/?q=Sword&i=1215443) By Guilherme Furtado for Swordsman
 * [Mohawk](https://thenounproject.com/search/?q=mohawk&i=1426649) By Dairy Free Design for Mohawk Warrior
 * [Roman Helmet](https://thenounproject.com/search/?q=legion&i=440134) By parkjisun for Legion
 * [Horse](https://thenounproject.com/search/?q=Horse&i=1373793) By AFY Studio for Horseman
 * [Horse Head](https://thenounproject.com/search/?q=Cavalry&i=374037) By Juan Pablo Bravo for Companion Cavalry
 * [Judge](https://thenounproject.com/search/?q=judge&i=1076388) By Krisztián Mátyás for Courthouse
-* [Petra](https://thenounproject.com/search/?q=petra&i=2855893) By Ranah Pixel Studio for Petra
 
 ### Medieval Era
 
@@ -84,7 +82,7 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 * [Artillery](https://thenounproject.com/search/?q=Artillery&i=1165261) By Creative Mania
 * [Ship](https://thenounproject.com/term/ship/1594793/) By Aisyah for Ironclad
 
-### Modern, Atomic and Information
+### Modern
 
 * [Helmet](https://thenounproject.com/term/helmet/25216/) By Daniel Turner for Great War Infantry
 * [Cap](https://thenounproject.com/search/?q=kepi&i=950267) By Creative Mania for Foreign Legion
@@ -100,7 +98,6 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 * [Tank](https://thenounproject.com/search/?q=tank&i=981914) By jeff
 * [Tank](https://thenounproject.com/manueldixken/collection/german-tanks/?i=960769) Manuel Dixken, DE for Panzer
 * [APC](https://thenounproject.com/search/?q=apc&i=9965) By Luke Anthony Firth for Mechanized Infantry
-* [Missile](https://thenounproject.com/term/missile/2311325/) By Eucalyp for Mobile SAM
 * [Military vehicle](https://thenounproject.com/search/?q=Army%20rocket&i=23115) By Luke Anthony Firth For Rocket Artillery
 * [Modern Armor](https://thenounproject.com/search/?q=tank&i=218) By Public Domain Nouns for Modern Armor
 * [Manhattan Project](https://thenounproject.com/search/?q=Nuclear%20Bomb&i=2041074) By corpus delicti, GR
@@ -222,7 +219,7 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 * [Hagia Sophia](https://thenounproject.com/term/hagia-sophia/1907752/) By Felipe Alvarado
 * [Factory](https://thenounproject.com/term/factory/1624235/) By Maxim Kulikov for Ironworks
 * [Notre Dame](https://thenounproject.com/term/notre-dame/1361725/) By Marco Livolsi
-* [Shield and Swords](https://thenounproject.com/term/shield-and-swords/1477527/) By Alina Oleynik for Armory
+* [Bullets](https://thenounproject.com/term/bullets/810156/) By Aldric Rodriguez for Armory 
 * [Machu Picchu](https://thenounproject.com/browse/?i=1678226/) By [Chanut is Industries](https://thenounproject.com/chanut-is)
 * [Garden](https://thenounproject.com/search/?q=garden&i=1478380) By Bharat 
 
@@ -243,7 +240,6 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 * [Bank](https://thenounproject.com/term/bank/1882194/) By projecthayat
 * [Harbor](https://thenounproject.com/term/harbor/225583/) By Rflor for Seaport
 * [Mansion](https://www.flaticon.com/free-icon/mansion_509903#term=persian&page=1&position=19) by Freepik for Satrap's Court
-* [Bullets](https://thenounproject.com/term/bullets/810156/) By Aldric Rodriguez for Arsenal
 
 ### Industrial Era
 
@@ -257,7 +253,6 @@ Unless otherwise specified, all the following are from [the Noun Project](https:
 
 * [Stadium](https://thenounproject.com/term/stadium/13872/) By Karuna Lalvani
 * [Signal Tower](https://thenounproject.com/term/signal-tower/1547758/) By Nociconist for Broadcast Tower
-* [Base](https://thenounproject.com/term/base/3890712/) By Kevin for Military Base
 * [Eiffel Tower](https://thenounproject.com/term/eiffel-tower/1907757/) By Felipe Alvarado
 * [Statue of Liberty](https://thenounproject.com/search/?q=statue%20of%20liberty&i=1801199) By 1516
 * [Christ the redeemer](https://thenounproject.com/term/christ-the-redeemer/56112/) By Stefan Spieler for Cristo Redentor

@@ -258,6 +258,7 @@
 		"greatPersonPoints": {"culture": 1},
 		"requiredTech": "Construction",
 		"quote": "'Regard your soldiers as your children, and they will follow you into the deepest valleys; look on them as your own beloved sons, and they will stand by you even unto death.'  - Sun Tzu"
+		// will be introduced in G&K expansion pack
 	},
 	{
 		"name": "Temple",
@@ -345,7 +346,8 @@
 		"uniques": ["[+2 Gold] from [Gold Ore] tiles in this city", "[+2 Gold] from [Silver] tiles in this city"],
 		"requiredTech": "Currency"
 	},
-	{ // Flood plains are not supposed to be affected by this wonder. Add stats to all desert tiles and then add negative stats to flood plains to undo the effect on them for now
+	/*
+	{ // Will be Introduced in Gods & Kings. Flood plains are not supposed to be affected by this wonder. Add stats to all desert tiles and then add negative stats to flood plains to undo the effect on them for now
 		"name": "Petra",
 		"culture": 1,
 		"isWonder": true,
@@ -354,6 +356,7 @@
 		"requiredTech": "Currency",
 		"quote": "'...who drinks the water I shall give him, says the Lord, will have a spring inside him welling up for eternal life. Let them bring me to your holy mountain in the place where you dwell. Across the desert and through the mountain to the Canyon of the Crescent Moon...'  - Indiana Jones"
 	},
+	*/
 	{
 		"name": "Aqueduct",
 		"maintenance": 1,
@@ -551,6 +554,7 @@
 		"uniques": ["All newly-trained [relevant] units in this city receive the [Drill I] promotion"],
 		"requiredTech": "Chivalry",
 		"quote": "'Justice is an unassailable fortress, built on the brow of a mountain which cannot be overthrown by the violence of torrents, nor demolished by the force of armies.'  - Joseph Addison"
+		// will be introduced in G&K expansion pack
 	},
 	{
 		"name": "Ironworks",
@@ -667,6 +671,7 @@
 		"uniques": ["Free Great Person"],
 		"requiredTech": "Printing Press",
 		"quote": "'Don't clap too hard - it's a very old building.' - John Osbourne"
+		// will be introduced in G&K expansion pack
 	},
 	{
 		"name": "Himeji Castle",
@@ -766,14 +771,16 @@
 		"requiredResource": "Coal",
 		"requiredTech": "Industrialization"
 	},
+	/*
 	{
 		"name": "Arsenal",
-		"cityStrength": 9,
-		"cityHealth": 25,
+		"cityStrength": 6,
 		"hurryCostModifier": 25,
 		"requiredBuilding": "Castle",
-		"requiredTech": "Metallurgy"
+		"requiredTech": "Rifling"
+		//+9 City Defense Strength, +25 City Hit Points, requiredTech "Metallurgy" in expansions
 	},
+	*/
 	{
 		"name": "Military Academy",
 		"xpForNewUnits": 15,
@@ -876,14 +883,16 @@
 		"maintenance": 2,
 		"requiredTech": "Refrigeration"
 	},
+	/*
 	{
 		"name": "Military Base",
 		"cityStrength": 12,
-		"cityHealth": 25,
 		"hurryCostModifier": 25,
 		"requiredBuilding": "Arsenal",
-		"requiredTech": "Replaceable Parts"
+		"requiredTech": "Telegraph"
+		//+25 City Hit Points, requiredTech "Replaceable parts" in expansions
 	},
+	*/
 	{
 		"name": "Cristo Redentor",
 		"culture": 5,
@@ -913,6 +922,7 @@
 			"Must have an owned [Mountain] within [2] tiles"],
 		"requiredTech": "Railroad",
 		"quote": "'...the location is one of the most beautiful to be found, holy and unapproachable, a worthy temple for the divine friend who has brought salvation and true blessing to the world.'  - King Ludwig II of Bavaria"
+		// will be introduced in G&K expansion pack
 	},
 	
 	// Information Era
@@ -968,6 +978,7 @@
 		"providesFreeBuilding": "Broadcast Tower"
 		"uniques": ["+1 population in each city","+1 happiness in each city"]
 		"requiredTech": "Telecommunications" // todo doesn't exist yet!
+		// will be introduced in G&K expansion pack
 	},
 	{
 		"name": "United Nations",
@@ -1027,6 +1038,7 @@
 			"+[25]% Production when constructing [Spaceship part] [in this city]"],
 		"requiredTech": "Satellites",
 		"quote": "'The wonder is, not that the field of stars is so vast, but that man has measured it.'  - Anatole France"
+		// will be introduced in G&K expansion pack
 	},
 	{
 		"name": "SS Cockpit",

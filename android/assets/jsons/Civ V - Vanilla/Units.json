@@ -87,7 +87,7 @@
 		"cost": 40,
 		"requiredTech": "Archery",
 		"obsoleteTech": "Machinery",
-		"upgradesTo": "Composite Bowman",
+		"upgradesTo": "Crossbowman",
 		"attackSound": "arrow"
 	},
 	/*
@@ -304,6 +304,7 @@
 		"hurryCostModifier": 20,
 		"attackSound": "throw"
 	},
+	/*
 	{
 		"name": "Composite Bowman",
 		"unitType": "Ranged",
@@ -315,7 +316,9 @@
 		"obsoleteTech": "Machinery",
 		"upgradesTo": "Crossbowman",
 		"attackSound": "arrow"
+		// will be introduced in G&K expansion
 	},
+	*/
 	{
 		"name": "Swordsman",
 		"unitType": "Melee",
@@ -567,6 +570,7 @@
 		"upgradesTo": "Frigate",
 		"uniques": ["Cannot enter ocean tiles"],
 		"attackSound": "arrow"
+		// will be introduced in G&K expansion
 	},
 	{
 		"name": "Knight",
@@ -847,6 +851,7 @@
 		"upgradesTo": "Machine Gun",
 		"obsoleteTech": "Ballistics",
 		"attackSound": "machinegun"
+		// will be introduced in Gods & Kings expansion
 	},
 	{
 		"name": "Rifleman",
@@ -884,6 +889,7 @@
 		"uniques": ["[50]% chance to intercept air attacks","+[50]% Strength vs [Bomber]",
 			"6 tiles in every direction always visible"],
 		"attackSound": "shot"
+		// will be introduced in G&K expansion
 	},
 	{
 		"name": "Great War Bomber",
@@ -898,6 +904,7 @@
 		"upgradesTo": "Bomber",
 		"obsoleteTech": "Radar",
 		"attackSound": "shot"
+		// will be introduced in G&K expansion
 	},
 	{
 		"name": "Norwegian Ski Infantry",
@@ -981,7 +988,7 @@
 		"cost": 375,
 		"requiredTech": "Radar",
 		"requiredResource": "Oil",
-		"upgradesTo": "Jet Fighter",
+		//"upgradesTo": "Jet Fighter",
 		"uniques": ["[100]% chance to intercept air attacks", "+[150]% Strength vs [Bomber]",
 			"6 tiles in every direction always visible"],
 		"attackSound": "shot"
@@ -1083,6 +1090,7 @@
 		"upgradesTo": "Tank",
 		"obsoleteTech": "Combined Arms",
 		"uniques": ["Can move after attacking","No defensive terrain bonus"]
+		// will be introduced in G&K expansion
 	},
 	{
 		"name": "Destroyer",
@@ -1128,6 +1136,7 @@
 		"upgradesTo": "Infantry",
 		"obsoleteTech": "Plastics",
 		"attackSound": "shot"
+		// will be introduced in G&K expansion
 	},
 	{
 		"name": "Foreign Legion",
@@ -1185,9 +1194,9 @@
 		"rangedStrength": 60,
 		"cost": 350,
 		"requiredTech": "Ballistics",
-		"upgradesTo": "Mechanized Infantry",
 		"attackSound": "machinegun"
-		// Upgrades to Bazooka in BNW
+		// will be introduced in G&K expansion
+		// Upgrades to Bazooka in BNW, Mechanized Infantry in G&K
 	},
 	{
 		"name": "Anti-Aircraft Gun",
@@ -1197,7 +1206,7 @@
 		"strength": 50,
 		"cost": 375,
 		"requiredTech": "Ballistics",
-		"upgradesTo": "Mobile SAM",
+		//"upgradesTo": "Mobile SAM",
 		"uniques": ["[100]% chance to intercept air attacks","+[150]% Strength vs [air units]"],
 		"attackSound": "machinegun"
 	},
@@ -1282,37 +1291,37 @@
 		//"upgradesTo": "Giant Death Robot",
 		"uniques": ["Can move after attacking","No defensive terrain bonus"]
 	},
-
+	
+	/* // THIS STUFF IS COMMENTED OUT!!!
 	// Information Era
-
 	{
 		"name": "Mobile SAM",
 		"unitType": "Melee",
-		"movement": 3,
+		"movement": 4,
 		"interceptRange": 2,
-		"strength": 65,
+		"strength": 40,
 		"cost": 425,
-		"requiredTech": "Rocketry",
+		"requiredTech": "Computers",
 		"uniques": ["[100]% chance to intercept air attacks","+[150]% Strength vs [air units]"],
 		"attackSound": "shot"
+		// 65 strength, 3 movement, requiredTech "Rocketry" in expansions
 	},
 	{
 		"name": "Jet Fighter",
 		"unitType": "Fighter",
-		"movement": 1,
-		"strength": 75,
+		"movement": 2,
+		"strength": 45,
 		"rangedStrength": 75,
 		"range": 10,
 		"interceptRange": 10,
 		"cost": 425,
 		"requiredTech": "Lasers",
-		"requiredResource": "Aluminum",
+		"requiredResource": "Aluminium",
 		"uniques": ["[100]% chance to intercept air attacks",
 			"+[150]% Strength vs [Bomber]",
 			"6 tiles in every direction always visible"]
 		"attackSound": "shot"
 	},
-	/* // THIS STUFF IS COMMENTED OUT!!!
 	{
 		"name": "Stealth Bomber",
 		"unitType": "Bomber",
@@ -1322,7 +1331,7 @@
 		"range": 20,
 		"cost": 425,
 		"requiredTech": "Stealth",
-		"requiredResource": "Aluminum",
+		"requiredResource": "Aluminium",
 		"uniques": ["Evasion", "6 tiles in every direction always visible"]
 		"attackSound": "shot"
 		// cannot be based on carrier
