@@ -27,8 +27,8 @@ class UniqueMap:HashMap<String, ArrayList<Unique>>() {
 
     fun getUniques(placeholderText: String): List<Unique> {
         val result = this[placeholderText]
-        if (result == null) return listOf()
-        else return result
+        return if (result == null) listOf()
+        else result
     }
 
     fun getAllUniques() = this.asSequence().flatMap { it.value.asSequence() }
