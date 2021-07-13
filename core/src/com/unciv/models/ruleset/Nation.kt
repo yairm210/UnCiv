@@ -168,7 +168,7 @@ class Nation : INamed {
                 for (unique in originalUnit.uniques.filterNot { it in unit.uniques })
                     textList += "  " + "Lost ability".tr() + "(" + "vs [${originalUnit.name}]".tr() + "): " + unique.tr()
                 for (promotion in unit.promotions.filter { it !in originalUnit.promotions })
-                    textList += "  " + promotion.tr() + " (" + ruleset.unitPromotions[promotion]!!.effect.tr() + ")"
+                    textList += "  " + promotion.tr() + " (" + ruleset.unitPromotions[promotion]!!.uniques.joinToString(",") { it.tr() } + ")"
             } else if (unit.replaces != null) {
                 textList += unit.name.tr() + " - " + "Replaces [${unit.replaces}], which is not found in the ruleset!".tr()
             } else {
