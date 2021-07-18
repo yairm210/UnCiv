@@ -83,11 +83,10 @@ class Technology {
 
     fun getEnabledBuildings(civInfo: CivilizationInfo): List<Building> {
         var enabledBuildings = civInfo.gameInfo.ruleSet.buildings.values.filter {
-            it.requiredTech == name &&
-                    (it.uniqueTo == null || it.uniqueTo == civInfo.civName)
+                    it.uniqueTo == null || it.uniqueTo == civInfo.civName
         }
         val replacedBuildings = enabledBuildings.mapNotNull { it.replaces }
-        enabledBuildings = enabledBuildings.filter { it.name !in replacedBuildings }
+        enabledBuildings = enabledBuildings.filter { it.name !in replacedBuildings && it.requiredTech == name }
 
         if (!civInfo.gameInfo.gameParameters.nuclearWeaponsEnabled)
             enabledBuildings = enabledBuildings.filterNot { it.name == "Manhattan Project" }
