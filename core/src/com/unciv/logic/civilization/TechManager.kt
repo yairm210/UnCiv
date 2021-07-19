@@ -4,7 +4,7 @@ import com.unciv.logic.city.CityInfo
 import com.unciv.logic.map.MapSize
 import com.unciv.logic.map.RoadStatus
 import com.unciv.logic.map.TileInfo
-import com.unciv.models.ruleset.Unique
+import com.unciv.models.ruleset.UniqueMap
 import com.unciv.models.ruleset.UniqueTriggerActivation
 import com.unciv.models.ruleset.tech.Technology
 import com.unciv.models.ruleset.unit.BaseUnit
@@ -23,7 +23,7 @@ class TechManager {
     @Transient
     var researchedTechnologies = ArrayList<Technology>()
     @Transient
-    private var researchedTechUniques = ArrayList<Unique>()
+    internal var techUniques = UniqueMap()
 
     // MapUnit.canPassThrough is the most called function in the game, and having these extremely specific booleans is or way of improving the time cost
     @Transient
@@ -85,11 +85,11 @@ class TechManager {
                 .count { it.isMajorCiv() && !it.isDefeated() }
         // https://forums.civfanatics.com/threads/the-mechanics-of-overflow-inflation.517970/
         techCost /= 1 + techsResearchedKnownCivs / undefeatedCivs.toFloat() * 0.3f
-        // http://www.civclub.net/bbs/forum.php?mod=viewthread&tid=123976
+        // https://civilization.fandom.com/wiki/Map_(Civ5)
         val worldSizeModifier = with (civInfo.gameInfo.tileMap.mapParameters.mapSize) {
             when {
-                radius >= MapSize.Huge.radius -> floatArrayOf(1.3f, 0.02f)
-                radius >= MapSize.Large.radius -> floatArrayOf(1.2f, 0.03f)
+                radius >= MapSize.Huge.radius -> floatArrayOf(1.3f, 0.025f)
+                radius >= MapSize.Large.radius -> floatArrayOf(1.2f, 0.0375f)
                 radius >= MapSize.Medium.radius -> floatArrayOf(1.1f, 0.05f)
                 else -> floatArrayOf(1f, 0.05f)
             }
@@ -129,8 +129,6 @@ class TechManager {
             return false
         return tech.prerequisites.all { isResearched(it) }
     }
-
-    fun getTechUniques() = researchedTechUniques.asSequence()
 
     //endregion
 
@@ -240,8 +238,8 @@ class TechManager {
         if (!newTech.isContinuallyResearchable())
             techsToResearch.remove(techName)
         researchedTechnologies = researchedTechnologies.withItem(newTech)
+        addTechToTransients(newTech)
         for (unique in newTech.uniqueObjects) {
-            researchedTechUniques = researchedTechUniques.withItem(unique)
             UniqueTriggerActivation.triggerCivwideUnique(unique, civInfo)
         }
         updateTransientBooleans()
@@ -314,6 +312,11 @@ class TechManager {
         }
     }
 
+    fun addTechToTransients(tech: Technology) {
+        for (unique in tech.uniqueObjects)
+            techUniques.addUnique(unique)
+    }
+
     private fun notifyRevealedResources(techName: String) {
         data class CityTileAndDistance(val city: CityInfo, val tile: TileInfo, val distance: Int)
 
@@ -356,7 +359,7 @@ class TechManager {
 
     fun setTransients() {
         researchedTechnologies.addAll(techsResearched.map { getRuleset().technologies[it]!! })
-        researchedTechUniques.addAll(researchedTechnologies.asSequence().flatMap { it.uniqueObjects.asSequence() })
+        researchedTechnologies.forEach { addTechToTransients(it) }
         updateTransientBooleans()
     }
 

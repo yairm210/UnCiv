@@ -8,17 +8,16 @@ import com.unciv.models.translations.tr
 class Promotion : INamed{
     override lateinit var name: String
     var prerequisites = listOf<String>()
-    var effect = ""
+    var uniques = listOf<String>()
     var unitTypes = listOf<String>() // The json parser wouldn't agree to deserialize this as a list of UnitTypes. =(
 
-    var uniques = listOf<String>()
-    val uniqueObjects: List<Unique> by lazy { uniques.map { Unique(it) } + Unique(effect)  }
+    val uniqueObjects: List<Unique> by lazy { uniques.map { Unique(it) } }
 
     fun getDescription(promotionsForUnitType: Collection<Promotion>, forCivilopedia:Boolean=false, ruleSet:Ruleset? = null):String {
         // we translate it before it goes in to get uniques like "vs units in rough terrain" and after to get "vs city
         val stringBuilder = StringBuilder()
 
-        for (unique in uniques + effect) {
+        for (unique in uniques) {
             stringBuilder.appendLine(unique.tr())
         }
 
