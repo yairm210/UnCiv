@@ -77,12 +77,12 @@ class CityStats {
 
     private fun getStatPercentBonusesFromRailroad(): Stats {
         val stats = Stats()
-        val railroadImprovement = cityInfo.getRuleset().tileImprovements["Railroad"]
-        if (railroadImprovement == null) return stats // for mods
-        val techEnablingRailroad = railroadImprovement.techRequired!!
+        val railroadImprovement = RoadStatus.Railroad.improvement(cityInfo.getRuleset())
+            ?: return stats // for mods
+        val techEnablingRailroad = railroadImprovement.techRequired
         // If we conquered enemy cities connected by railroad, but we don't yet have that tech,
-        // we shouldn't get bonuses, it's as if the tracks aare layed out but we can't operate them.
-        if (cityInfo.civInfo.tech.isResearched(techEnablingRailroad)
+        // we shouldn't get bonuses, it's as if the tracks are laid out but we can't operate them.
+        if ( (techEnablingRailroad == null || cityInfo.civInfo.tech.isResearched(techEnablingRailroad))
                 && (cityInfo.isCapital() || isConnectedToCapital(RoadStatus.Railroad)))
             stats.production += 25f
         return stats
@@ -364,8 +364,12 @@ class CityStats {
         if (cityInfo.civInfo.cities.count() < 2) return false// first city!
 
         // Railroad, or harbor from railroad
-        if (roadType == RoadStatus.Railroad) return cityInfo.isConnectedToCapital { it.any { it.contains("Railroad") } }
-        else return cityInfo.isConnectedToCapital()
+        return if (roadType == RoadStatus.Railroad) 
+                cityInfo.isConnectedToCapital { 
+                    roadTypes ->
+                    roadTypes.any { it.contains(RoadStatus.Railroad.name) }
+                }
+            else cityInfo.isConnectedToCapital()
     }
     //endregion
 
@@ -398,7 +402,7 @@ class CityStats {
         newStatPercentBonusList["Buildings"] = getStatPercentBonusesFromUniques(currentConstruction, localBuildingUniques)
                 .plus(cityInfo.cityConstructions.getStatPercentBonuses()) // This function is to be deprecated but it'll take a while.
         newStatPercentBonusList["Wonders"] = getStatPercentBonusesFromUniques(currentConstruction, cityInfo.civInfo.getCivWideBuildingUniques())
-        newStatPercentBonusList["Railroad"] = getStatPercentBonusesFromRailroad()
+        newStatPercentBonusList["Railroads"] = getStatPercentBonusesFromRailroad()  // Name chosen same as tech, for translation, but theoretically independent
         newStatPercentBonusList["Resources"] = getStatPercentBonusesFromResources(currentConstruction)
         newStatPercentBonusList["National ability"] = getStatPercentBonusesFromNationUnique(currentConstruction)
         newStatPercentBonusList["Puppet City"] = getStatPercentBonusesFromPuppetCity()

@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.unciv.Constants
 import com.unciv.UncivGame
 import com.unciv.logic.map.MapUnit
+import com.unciv.logic.map.RoadStatus
 import com.unciv.models.UnitAction
 import com.unciv.models.translations.equalsPlaceholderText
 import com.unciv.models.translations.getPlaceholderParameters
@@ -54,7 +55,9 @@ class UnitActionsTable(val worldScreen: WorldScreen) : Table() {
                 "Start Golden Age" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Great Artist"), 'g')
                 "Hurry Wonder" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Great Engineer"), 'g')
                 "Conduct Trade Mission" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Great Merchant"), 'g')
-                "Construct road" -> return UnitIconAndKey(ImageGetter.getImprovementIcon("Road"), 'r')
+                // Deprecated since 3.15.4
+                    "Construct road" -> return UnitIconAndKey(ImageGetter.getImprovementIcon(RoadStatus.Road.name), 'r')
+                //
                 "Paradrop" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Paratrooper"), 'p')
                 "Set up" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Catapult"), 't')
                 "Explore" -> return UnitIconAndKey(ImageGetter.getUnitIcon("Scout"), 'x')

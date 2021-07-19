@@ -369,8 +369,7 @@ open class TileInfo {
             } -> false
 
             // Road improvements can change on tiles with irremovable improvements - nothing else can, though.
-            improvement.name != RoadStatus.Railroad.name && improvement.name != RoadStatus.Railroad.name
-                    && improvement.name != "Remove Road" && improvement.name != "Remove Railroad"
+            RoadStatus.values().none { it.name == improvement.name || it.removeAction == improvement.name }
                     && getTileImprovement().let { it != null && it.hasUnique("Irremovable") } -> false
 
             // Decide cancelImprovementOrder earlier, otherwise next check breaks it
@@ -383,10 +382,8 @@ open class TileInfo {
                 if (filter == "River") return@any !isAdjacentToRiver()
                 else return@any !neighbors.any { neighbor -> neighbor.matchesFilter(filter) }
             } -> false
-            improvement.name == "Road" && roadStatus == RoadStatus.None && !isWater -> true
-            improvement.name == "Railroad" && this.roadStatus != RoadStatus.Railroad && !isWater -> true
-            improvement.name == "Remove Road" && this.roadStatus == RoadStatus.Road -> true
-            improvement.name == "Remove Railroad" && this.roadStatus == RoadStatus.Railroad -> true
+            !isWater && RoadStatus.values().any { it.name == improvement.name && it > roadStatus } -> true
+            improvement.name == roadStatus.removeAction -> true
             topTerrain.unbuildable && !improvement.isAllowedOnFeature(topTerrain.name) -> false
             // DO NOT reverse this &&. isAdjacentToFreshwater() is a lazy which calls a function, and reversing it breaks the tests.
             improvement.hasUnique("Can also be built on tiles adjacent to fresh water") && isAdjacentToFreshwater -> true

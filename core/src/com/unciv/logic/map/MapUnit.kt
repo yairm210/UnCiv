@@ -271,7 +271,7 @@ class MapUnit {
             && canBuildImprovement(getTile().getTileImprovementInProgress()!!)) 
                 return false
         // unique "Can construct roads" deprecated since 3.15.5
-            if (hasUnique("Can construct roads") && currentTile.improvementInProgress == "Road") return false
+            if (hasUnique("Can construct roads") && currentTile.improvementInProgress == RoadStatus.Road.name) return false
         //
         if (isFortified()) return false
         if (action == Constants.unitActionExplore || isSleeping()
@@ -466,6 +466,7 @@ class MapUnit {
 
         if (civInfo.isCurrentPlayer())
             UncivGame.Current.settings.addCompletedTutorialTask("Construct an improvement")
+
         when {
             tile.improvementInProgress!!.startsWith("Remove") -> {
                 val tileImprovement = tile.getTileImprovement()
@@ -477,7 +478,7 @@ class MapUnit {
                         null // We removed a terrain (e.g. Forest) and the improvement (e.g. Lumber mill) requires it!
                     if (tile.resource != null) civInfo.updateDetailedCivResources()        // unlikely, but maybe a mod makes a resource improvement dependent on a terrain feature
                 }
-                if (tile.improvementInProgress == "Remove Road" || tile.improvementInProgress == "Remove Railroad")
+                if (RoadStatus.values().any { tile.improvementInProgress == it.removeAction })
                     tile.roadStatus = RoadStatus.None
                 else {
                     val removedFeatureName = tile.improvementInProgress!!.removePrefix("Remove ")
@@ -490,8 +491,9 @@ class MapUnit {
                     tile.terrainFeatures.remove(removedFeatureName)
                 }
             }
-            tile.improvementInProgress == "Road" -> tile.roadStatus = RoadStatus.Road
-            tile.improvementInProgress == "Railroad" -> tile.roadStatus = RoadStatus.Railroad
+            //todo: is it possible worldscreen-visible stats change by connecting stuff?
+            tile.improvementInProgress == RoadStatus.Road.name -> tile.roadStatus = RoadStatus.Road
+            tile.improvementInProgress == RoadStatus.Railroad.name -> tile.roadStatus = RoadStatus.Railroad
             else -> {
                 tile.improvement = tile.improvementInProgress
                 if (tile.resource != null) civInfo.updateDetailedCivResources()
@@ -598,7 +600,7 @@ class MapUnit {
         ) workOnImprovement()
         // unique "Can construct roads" deprecated since 3.15.4
             if (currentMovement > 0 && hasUnique("Can construct roads")
-                && currentTile.improvementInProgress == "Road"
+                && currentTile.improvementInProgress == RoadStatus.Road.name
             ) workOnImprovement()
         //
         if (currentMovement == getMaxMovement().toFloat() && isFortified()) {

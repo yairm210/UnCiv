@@ -264,7 +264,7 @@ class TechPickerScreen(internal val civInfo: CivilizationInfo, centerOnTech: Tec
     }
     
     private fun getTechProgressLabel(techs: List<String>): String {
-        val progress = techs.sumBy { tech -> civTech.scienceSpentOnTech(tech) }
+        val progress = techs.sumBy { tech -> civTech.researchOfTech(tech) }
         val techCost = techs.sumBy { tech -> civInfo.tech.costOfTech(tech) }
         return "(${progress}/${techCost})"
     }

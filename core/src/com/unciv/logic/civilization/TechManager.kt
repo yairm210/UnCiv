@@ -4,6 +4,7 @@ import com.unciv.logic.city.CityInfo
 import com.unciv.logic.map.MapSize
 import com.unciv.logic.map.RoadStatus
 import com.unciv.logic.map.TileInfo
+import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.Unique
 import com.unciv.models.ruleset.UniqueTriggerActivation
 import com.unciv.models.ruleset.tech.Technology
@@ -35,7 +36,7 @@ class TechManager {
 
     // UnitMovementAlgorithms.getMovementCostBetweenAdjacentTiles is a close second =)
     @Transient
-    var movementSpeedOnRoadsImproved = false
+    var movementSpeedOnRoads = 1f
     @Transient
     var roadsConnectAcrossRivers = false
 
@@ -51,7 +52,6 @@ class TechManager {
     var techsToResearch = ArrayList<String>()
     var overflowScience = 0
     private var techsInProgress = HashMap<String, Int>()
-    fun scienceSpentOnTech(tech: String): Int = if (tech in techsInProgress) techsInProgress[tech]!! else 0
 
     /** In civ IV, you can auto-convert a certain percentage of gold in cities to science */
     var goldPercentConvertedToScience = 0.6f
@@ -109,8 +109,23 @@ class TechManager {
         return if (techsToResearch.isEmpty()) null else techsToResearch[0]
     }
 
-    private fun researchOfTech(TechName: String?): Int {
-        return if (techsInProgress.containsKey(TechName)) techsInProgress[TechName]!! else 0
+    fun researchOfTech(TechName: String?) = techsInProgress[TechName] ?: 0
+    // Was once duplicated as fun scienceSpentOnTech(tech: String): Int
+    
+    /** Replace a changed tech name, only temporarily used for breaking ruleset updates */
+    fun replaceUpdatedTechName(oldTechName: String, newTechName: String) {
+        if (oldTechName in techsResearched) {
+            techsResearched.remove(oldTechName)
+            techsResearched.add(newTechName)
+        }
+        val index = techsToResearch.indexOf(oldTechName)
+        if (index >= 0) {
+            techsToResearch[index] = newTechName
+        }
+        if (oldTechName in techsInProgress) {
+            techsInProgress[newTechName] = researchOfTech(oldTechName)
+            techsInProgress.remove(oldTechName)
+        }
     }
 
     fun remainingScienceToTech(techName: String) = costOfTech(techName) - researchOfTech(techName)
@@ -358,6 +373,8 @@ class TechManager {
         researchedTechnologies.addAll(techsResearched.map { getRuleset().technologies[it]!! })
         researchedTechUniques.addAll(researchedTechnologies.asSequence().flatMap { it.uniqueObjects.asSequence() })
         updateTransientBooleans()
+        movementSpeedOnRoads = if (civInfo.hasUnique("Improves movement speed on roads"))
+            RoadStatus.Road.movementImproved else RoadStatus.Road.movement
     }
 
     private fun updateTransientBooleans() {
@@ -365,7 +382,6 @@ class TechManager {
         unitsCanEmbark = wayfinding || civInfo.hasUnique("Enables embarkation for land units")
 
         embarkedUnitsCanEnterOcean = wayfinding || civInfo.hasUnique("Enables embarked units to enter ocean tiles")
-        movementSpeedOnRoadsImproved = civInfo.hasUnique("Improves movement speed on roads")
         roadsConnectAcrossRivers = civInfo.hasUnique("Roads connect tiles across rivers")
     }
 

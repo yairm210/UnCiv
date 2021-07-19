@@ -1,6 +1,7 @@
 package com.unciv.models.ruleset.tile
 
 import com.unciv.logic.civilization.CivilizationInfo
+import com.unciv.logic.map.RoadStatus
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.Unique
 import com.unciv.models.stats.NamedStats
@@ -72,6 +73,7 @@ class TileImprovement : NamedStats(), ICivilopediaText {
 
     fun hasUnique(unique: String) = uniques.contains(unique)
     fun isGreatImprovement() = hasUnique("Great Improvement")
+    fun isRoad() = RoadStatus.values().any { it != RoadStatus.None && it.name == this.name }
 
     /**
      * Check: Is this improvement allowed on a [given][name] terrain feature?
@@ -93,7 +95,7 @@ class TileImprovement : NamedStats(), ICivilopediaText {
         return when (filter) {
             name -> true
             "All" -> true
-            "All Road" -> name == "road" || name == "railroad"
+            "All Road" -> isRoad()
             "Great Improvement", "Great" -> isGreatImprovement()
             else -> false
         }

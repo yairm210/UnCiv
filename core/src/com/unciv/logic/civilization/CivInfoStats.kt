@@ -69,13 +69,7 @@ class CivInfoStats(val civInfo: CivilizationInfo) {
                 if (tile.isCityCenter()) continue
                 if (ignoredTileTypes.any { tile.matchesFilter(it, civInfo) }) continue
 
-                val tileUpkeep =
-                        when (tile.roadStatus) {
-                            RoadStatus.Road -> 1
-                            RoadStatus.Railroad -> 2
-                            RoadStatus.None -> 0
-                        }
-                transportationUpkeep += tileUpkeep
+                transportationUpkeep += tile.roadStatus.upkeep
             }
         }
         for (unique in civInfo.getMatchingUniques("Maintenance on roads & railroads reduced by []%"))

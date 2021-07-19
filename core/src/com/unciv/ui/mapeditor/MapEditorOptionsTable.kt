@@ -141,8 +141,8 @@ class MapEditorOptionsTable(val mapEditorScreen: MapEditorScreen): Table(CameraS
             improvementImage.onClick {
                 tileAction = {
                     when (improvement.name) {
-                        "Road" -> it.roadStatus = RoadStatus.Road
-                        "Railroad" -> it.roadStatus = RoadStatus.Railroad
+                        RoadStatus.Road.name -> it.roadStatus = RoadStatus.Road
+                        RoadStatus.Railroad.name -> it.roadStatus = RoadStatus.Railroad
                         else -> it.improvement = improvement.name
                     }
                 }

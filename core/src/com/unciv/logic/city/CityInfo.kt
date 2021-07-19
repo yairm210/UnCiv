@@ -478,11 +478,11 @@ class CityInfo {
 
     internal fun tryUpdateRoadStatus() {
         if (getCenterTile().roadStatus == RoadStatus.None) {
-            val roadImprovement = getRuleset().tileImprovements["Road"]
+            val roadImprovement = RoadStatus.Road.improvement(getRuleset())
             if (roadImprovement != null && roadImprovement.techRequired in civInfo.tech.techsResearched)
                 getCenterTile().roadStatus = RoadStatus.Road
         } else if (getCenterTile().roadStatus != RoadStatus.Railroad) {
-            val railroadImprovement = getRuleset().tileImprovements["Railroad"]
+            val railroadImprovement = RoadStatus.Railroad.improvement(getRuleset())
             if (railroadImprovement != null && railroadImprovement.techRequired in civInfo.tech.techsResearched)
                 getCenterTile().roadStatus = RoadStatus.Railroad
         }

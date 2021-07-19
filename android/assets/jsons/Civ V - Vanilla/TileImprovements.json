@@ -110,7 +110,7 @@
 	{
 		"name": "Railroad",
 		"turnsToBuild": 4,
-		"techRequired": "Railroad",
+		"techRequired": "Railroads",
 		"uniques": ["Can be built outside your borders", "Costs [2] gold per turn when in your territory"],
 		"shortcutKey": "R",
         "civilopediaText": [{text:"Reduces movement cost to ⅒ if the other tile also has a Railroad"}]
