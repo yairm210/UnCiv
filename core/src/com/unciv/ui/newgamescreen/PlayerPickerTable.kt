@@ -18,24 +18,29 @@ import com.unciv.models.ruleset.Nation
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.translations.tr
 import com.unciv.ui.mapeditor.GameParametersScreen
+import com.unciv.ui.pickerscreens.PickerScreen
 import com.unciv.ui.utils.*
 import java.util.*
 
 /**
  * This [Table] is used to pick or edit players information for new game creation.
- * Could be inserted to [NewGameScreen], [GameParametersScreen] or any other [Screen]
+ * Could be inserted to [NewGameScreen], [GameParametersScreen] or any other [Screen][CameraStageBaseScreen]
  * which provides [GameSetupInfo] and [Ruleset].
  * Upon player changes updates property [gameParameters]. Also updates available nations when mod changes.
  * In case it is used in map editor, as a part of [GameParametersScreen], additionally tries to
  * update units/starting location on the [previousScreen] when player deleted or
  * switched nation.
- * @param [previousScreen] [Screen] where player table is inserted, should provide [GameSetupInfo] as property,
- *          updated when player added/deleted/changed
- * @param [gameParameters] contains info about number of players.
+ * @param previousScreen A [Screen][CameraStageBaseScreen] where the player table is inserted, should provide [GameSetupInfo] as property, updated when a player is added/deleted/changed
+ * @param gameParameters contains info about number of players.
+ * @param blockWidth sets a width for the Civ "blocks". If too small a third of the stage is used.
  */
-class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters: GameParameters): Table() {
+class PlayerPickerTable(
+    val previousScreen: IPreviousScreen,
+    var gameParameters: GameParameters,
+    blockWidth: Float = 0f
+): Table() {
     val playerListTable = Table()
-    val civBlocksWidth = previousScreen.stage.width / 3
+    val civBlocksWidth = if(blockWidth <= 10f) previousScreen.stage.width / 3 - 5f else blockWidth
 
     /** Locks player table for editing, currently unused, was previously used for scenarios and could be useful in the future.*/
     var locked = false
@@ -48,7 +53,6 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
             player.playerId = "" // This is to stop people from getting other users' IDs and cheating with them in multiplayer games
 
         top()
-        add("Civilizations".toLabel(fontSize = 24)).padBottom(20f).row()
         add(ScrollPane(playerListTable).apply { setOverscroll(false, false) }).width(civBlocksWidth)
         update()
     }
@@ -88,8 +92,9 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
                     }
             playerListTable.add(addPlayerButton).pad(10f)
         }
-        // can enable start game when more than 1 active player
-        previousScreen.setRightSideButtonEnabled(gameParameters.players.count { it.chosenCiv != Constants.spectator } > 1)
+        // enable start game when more than 1 active player
+        val moreThanOnePlayer = 1 < gameParameters.players.count { it.chosenCiv != Constants.spectator }
+        (previousScreen as? PickerScreen)?.setRightSideButtonEnabled(moreThanOnePlayer)
     }
 
     /**
@@ -128,8 +133,8 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
         val nationTable = getNationTable(player)
         playerTable.add(nationTable).left()
 
-        val playerTypeTextbutton = player.playerType.name.toTextButton()
-        playerTypeTextbutton.onClick {
+        val playerTypeTextButton = player.playerType.name.toTextButton()
+        playerTypeTextButton.onClick {
             if (player.playerType == PlayerType.AI)
                 player.playerType = PlayerType.Human
             // we cannot change Spectator player to AI type, robots not allowed to spectate :(
@@ -137,7 +142,7 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
                 player.playerType = PlayerType.AI
             update()
         }
-        playerTable.add(playerTypeTextbutton).width(100f).pad(5f).right()
+        playerTable.add(playerTypeTextButton).width(100f).pad(5f).right()
         if (!locked) {
             playerTable.add("-".toLabel(Color.BLACK, 30).apply { this.setAlignment(Align.center) }
                     .surroundWithCircle(40f)
@@ -149,34 +154,34 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
         }
         if (gameParameters.isOnlineMultiplayer && player.playerType == PlayerType.Human) {
 
-            val playerIdTextfield = TextField(player.playerId, CameraStageBaseScreen.skin)
-            playerIdTextfield.messageText = "Please input Player ID!".tr()
-            playerTable.add(playerIdTextfield).colspan(2).fillX().pad(5f)
+            val playerIdTextField = TextField(player.playerId, CameraStageBaseScreen.skin)
+            playerIdTextField.messageText = "Please input Player ID!".tr()
+            playerTable.add(playerIdTextField).colspan(2).fillX().pad(5f)
             val errorLabel = "✘".toLabel(Color.RED)
             playerTable.add(errorLabel).pad(5f).row()
 
             fun onPlayerIdTextUpdated() {
                 try {
-                    UUID.fromString(IdChecker.checkAndReturnPlayerUuid(playerIdTextfield.text))
-                    player.playerId = playerIdTextfield.text.trim()
+                    UUID.fromString(IdChecker.checkAndReturnPlayerUuid(playerIdTextField.text))
+                    player.playerId = playerIdTextField.text.trim()
                     errorLabel.apply { setText("✔");setFontColor(Color.GREEN) }
                 } catch (ex: Exception) {
                     errorLabel.apply { setText("✘");setFontColor(Color.RED) }
                 }
             }
 
-            playerIdTextfield.addListener { onPlayerIdTextUpdated(); true }
+            playerIdTextField.addListener { onPlayerIdTextUpdated(); true }
             val currentUserId = UncivGame.Current.settings.userId
             val setCurrentUserButton = "Set current user".toTextButton()
             setCurrentUserButton.onClick {
-                playerIdTextfield.text = currentUserId
+                playerIdTextField.text = currentUserId
                 onPlayerIdTextUpdated()
             }
             playerTable.add(setCurrentUserButton).colspan(3).fillX().pad(5f).row()
 
             val copyFromClipboardButton = "Player ID from clipboard".toTextButton()
             copyFromClipboardButton.onClick {
-                playerIdTextfield.text = Gdx.app.clipboard.contents
+                playerIdTextField.text = Gdx.app.clipboard.contents
                 onPlayerIdTextUpdated()
             }
             playerTable.add(copyFromClipboardButton).colspan(3).fillX().pad(5f)
@@ -214,74 +219,117 @@ class PlayerPickerTable(val previousScreen: IPreviousScreen, var gameParameters:
      * @param player current player
      */
     private fun popupNationPicker(player: Player) {
-        val nationsPopup = Popup(previousScreen as CameraStageBaseScreen)
-        val nationListTable = Table()
-
-        val ruleset = previousScreen.ruleset
-        val height = previousScreen.stage.height * 0.8f
-        nationsPopup.add(ScrollPane(nationListTable).apply { setOverscroll(false, false) })
-                .size(civBlocksWidth + 10, height)  // +10, because the nation table has a 5f pad, for a total of +10f
-        val nationDetailsTable = Table()
-        nationsPopup.add(ScrollPane(nationDetailsTable).apply { setOverscroll(false, false) })
-                .size(civBlocksWidth + 10, height) // Same here, see above
-
-        val randomNation = Nation().apply { name = "Random"; innerColor = listOf(255, 255, 255); outerColor = listOf(0, 0, 0); setTransients() }
-        val nations = ArrayList<Nation>()
-        if (!noRandom) nations += randomNation
-        nations += getAvailablePlayerCivs()
-        for (nation in nations) {
-            if (player.chosenCiv == nation.name)
-                continue
-            // only humans can spectate, sorry robots
-            if (player.playerType == PlayerType.AI && nation.isSpectator())
-                continue
-            val nationTable = NationTable(nation, civBlocksWidth, 0f) // no need for min height
-            nationListTable.add(nationTable).row()//.width(civBlocksWidth).row()
-            nationTable.onClick {
-                nationDetailsTable.clear()
-
-                val nationUniqueLabel = nation.getUniqueString(ruleset).toLabel(nation.getInnerColor())
-                nationUniqueLabel.wrap = true
-                nationDetailsTable.add(NationTable(nation, civBlocksWidth, height, ruleset))
-                nationDetailsTable.onClick {
-                    if (previousScreen is GameParametersScreen)
-                        previousScreen.mapEditorScreen.tileMap.switchPlayersNation(player, nation)
-                    player.chosenCiv = nation.name
-                    nationsPopup.close()
-                    update()
-                }
-            }
-        }
-
-        nationsPopup.pack()
-
-        val closeImage = ImageGetter.getImage("OtherIcons/Close")
-        closeImage.setSize(30f, 30f)
-        val closeImageHolder = Group() // This is to add it some more clickable space, to make it easier to click on the phone
-        closeImageHolder.setSize(50f, 50f)
-        closeImage.center(closeImageHolder)
-        closeImageHolder.addActor(closeImage)
-        closeImageHolder.onClick { nationsPopup.close() }
-        closeImageHolder.setPosition(0f, nationsPopup.height, Align.topLeft)
-        nationsPopup.addActor(closeImageHolder)
-
-        nationsPopup.open()
+        NationPickerPopup(this, player).open()
         update()
     }
 
     /**
      * Returns list of available civilization for all players, according
-     * to current ruleset, with exeption of city states nations and barbarians
+     * to current ruleset, with exception of city states nations and barbarians.
+     * 
+     * Skips nations already chosen by a player, unless parameter [dontSkipNation] says to keep a
+     * specific one. That is used so the picker can be used to inspect and confirm the current selection.
+     * 
      * @return [ArrayList] of available [Nation]s
      */
-    private fun getAvailablePlayerCivs(): ArrayList<Nation> {
+    internal fun getAvailablePlayerCivs(dontSkipNation: String? = null): ArrayList<Nation> {
         val nations = ArrayList<Nation>()
         for (nation in previousScreen.ruleset.nations.values
                 .filter { it.isMajorCiv() || it.isSpectator() }) {
-            if (gameParameters.players.any { it.chosenCiv == nation.name })
+            if (nation.name != dontSkipNation && gameParameters.players.any { it.chosenCiv == nation.name })
                 continue
             nations.add(nation)
         }
         return nations
+    }
+
+}
+
+private class NationPickerPopup(
+    private val playerPicker: PlayerPickerTable,
+    private val player: Player
+) : Popup(playerPicker.previousScreen as CameraStageBaseScreen) {
+    private val previousScreen = playerPicker.previousScreen
+    private val ruleset = previousScreen.ruleset
+    // This Popup's body has two halves of same size, either side by side or arranged vertically
+    // depending on screen proportions - determine height for one of those
+    private val partHeight = screen.stage.height * (if (screen.isNarrowerThan4to3()) 0.45f else 0.8f)
+    private val civBlocksWidth = playerPicker.civBlocksWidth
+    private val nationListTable = Table()
+    private val nationListScroll = ScrollPane(nationListTable)
+    private val nationDetailsTable = Table()
+
+    init {
+        nationListScroll.setOverscroll(false, false)
+        add(nationListScroll).size( civBlocksWidth + 10f, partHeight )
+            // +10, because the nation table has a 5f pad, for a total of +10f
+        if (screen.isNarrowerThan4to3()) row()
+        add(ScrollPane(nationDetailsTable).apply { setOverscroll(false, false) })
+            .size(civBlocksWidth + 10f, partHeight) // Same here, see above
+
+        val randomNation = Nation().apply {
+            name = "Random"
+            innerColor = listOf(255, 255, 255)
+            outerColor = listOf(0, 0, 0)
+            setTransients()
+        }
+        val nations = ArrayList<Nation>()
+        if (!playerPicker.noRandom) nations += randomNation
+        nations += playerPicker.getAvailablePlayerCivs(player.chosenCiv)
+        var nationListScrollY = 0f
+        var currentY = 0f
+        for (nation in nations) {
+            // only humans can spectate, sorry robots
+            if (player.playerType == PlayerType.AI && nation.isSpectator())
+                continue
+            if (player.chosenCiv == nation.name)
+                nationListScrollY = currentY
+            val nationTable = NationTable(nation, civBlocksWidth, 0f) // no need for min height
+            val cell = nationListTable.add(nationTable)
+            currentY += cell.padBottom + cell.prefHeight + cell.padTop
+            cell.row()
+            nationTable.onClick {
+                setNationDetails(nation)
+            }
+            if (player.chosenCiv == nation.name)
+                setNationDetails(nation)
+        }
+
+        nationListScroll.layout()
+        pack()
+        if (nationListScrollY > 0f) {
+            // center the selected nation vertically, getRowHeight safe because nationListScrollY > 0f ensures at least 1 row
+            nationListScrollY -= (nationListScroll.height - nationListTable.getRowHeight(0)) / 2
+            nationListScroll.scrollY = nationListScrollY.coerceIn(0f, nationListScroll.maxY)
+        }
+
+        val closeImage = ImageGetter.getImage("OtherIcons/Close")
+        closeImage.setSize(30f, 30f)
+        val closeImageHolder =
+            Group() // This is to add it some more clickable space, to make it easier to click on the phone
+        closeImageHolder.setSize(50f, 50f)
+        closeImage.center(closeImageHolder)
+        closeImageHolder.addActor(closeImage)
+        closeImageHolder.onClick { close() }
+        closeImageHolder.setPosition(0f, height, Align.topLeft)
+        addActor(closeImageHolder)
+    }
+
+    private fun setNationDetails(nation: Nation) {
+        nationDetailsTable.clear()
+
+//                val nationUniqueLabel = nation.getUniqueString(ruleset).toLabel(nation.getInnerColor())
+//                nationUniqueLabel.wrap = true
+        nationDetailsTable.add(NationTable(nation, civBlocksWidth, partHeight, ruleset))
+        nationDetailsTable.onClick {
+            if (previousScreen is GameParametersScreen)
+                previousScreen.mapEditorScreen.tileMap.switchPlayersNation(
+                    player,
+                    nation
+                )
+            player.chosenCiv = nation.name
+            close()
+            playerPicker.update()
+        }
     }
 }

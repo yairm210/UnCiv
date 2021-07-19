@@ -2,6 +2,7 @@ package com.unciv.ui.newgamescreen
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.utils.Array
@@ -37,29 +38,27 @@ class GameSetupInfo(var gameId:String, var gameParameters: GameParameters, var m
     }
 }
 
-class NewGameScreen(private val previousScreen: CameraStageBaseScreen, _gameSetupInfo: GameSetupInfo?=null): IPreviousScreen, PickerScreen(disableScroll = true) {
+class NewGameScreen(
+    private val previousScreen: CameraStageBaseScreen,
+    _gameSetupInfo: GameSetupInfo? = null
+): IPreviousScreen, PickerScreen() {
+
     override val gameSetupInfo = _gameSetupInfo ?: GameSetupInfo()
     override var ruleset = RulesetCache.getComplexRuleset(gameSetupInfo.gameParameters.mods) // needs to be set because the GameOptionsTable etc. depend on this
-    var newGameOptionsTable = GameOptionsTable(this) { desiredCiv: String -> playerPickerTable.update(desiredCiv) }
+    private val newGameOptionsTable = GameOptionsTable(this, isNarrowerThan4to3()) { desiredCiv: String -> playerPickerTable.update(desiredCiv) }
 
     // Has to be defined before the mapOptionsTable, since the mapOptionsTable refers to it on init
-    private var playerPickerTable = PlayerPickerTable(this, gameSetupInfo.gameParameters)
-    private var mapOptionsTable = MapOptionsTable(this)
-
+    private val playerPickerTable = PlayerPickerTable(
+        this, gameSetupInfo.gameParameters,
+        if (isNarrowerThan4to3()) stage.width - 20f else 0f
+    )
+    private val mapOptionsTable = MapOptionsTable(this)
 
     init {
         setDefaultCloseAction(previousScreen)
 
-        topTable.add(ScrollPane(newGameOptionsTable).apply { setOverscroll(false, false) })
-                .width(stage.width / 3).padTop(20f).top()
-        topTable.addSeparatorVertical()
-        topTable.add(ScrollPane(mapOptionsTable).apply { setOverscroll(false, false) })
-                .width(stage.width / 3).padTop(20f).top()
-        topTable.addSeparatorVertical()
-        topTable.add(ScrollPane(playerPickerTable)
-                .apply { setOverscroll(false, false) }
-                .apply { setScrollingDisabled(true, false) })
-                .width(stage.width / 3).padTop(20f).top()
+        if (isNarrowerThan4to3()) initPortrait()
+        else initLandscape()
 
         updateRuleset()
 
@@ -89,7 +88,6 @@ class NewGameScreen(private val previousScreen: CameraStageBaseScreen, _gameSetu
             }
 
             Gdx.input.inputProcessor = null // remove input processing - nothing will be clicked!
-
 
             if (mapOptionsTable.mapTypeSelectBox.selected.value == MapType.custom){
                 val map = MapSaver.loadMap(gameSetupInfo.mapFile!!)
@@ -136,16 +134,61 @@ class NewGameScreen(private val previousScreen: CameraStageBaseScreen, _gameSetu
         }
     }
 
+    private fun initLandscape() {
+        scrollPane.setScrollingDisabled(true,true)
+
+        topTable.add("Game Options".toLabel(fontSize = 24)).pad(20f, 0f)
+        topTable.addSeparatorVertical(Color.BLACK, 1f)
+        topTable.add("Map Options".toLabel(fontSize = 24)).pad(20f,0f)
+        topTable.addSeparatorVertical(Color.BLACK, 1f)
+        topTable.add("Civilizations".toLabel(fontSize = 24)).pad(20f,0f)
+        topTable.addSeparator(Color.CLEAR, height = 1f)
+
+        topTable.add(ScrollPane(newGameOptionsTable)
+                .apply { setOverscroll(false, false) })
+                .width(stage.width / 3).top()
+        topTable.addSeparatorVertical(Color.CLEAR, 1f)
+        topTable.add(ScrollPane(mapOptionsTable)
+                .apply { setOverscroll(false, false) })
+                .width(stage.width / 3).top()
+        topTable.addSeparatorVertical(Color.CLEAR, 1f)
+        topTable.add(playerPickerTable)  // No ScrollPane, PlayerPickerTable has its own
+                .width(stage.width / 3).top()
+    }
+    
+    private fun initPortrait() {
+        scrollPane.setScrollingDisabled(false,false)
+
+        topTable.add(ExpanderTab("Game Options") {
+            it.add(newGameOptionsTable).row()
+        }).expandX().fillX().row()
+        topTable.addSeparator(Color.DARK_GRAY, height = 1f)
+
+        topTable.add(newGameOptionsTable.getModCheckboxes(isPortrait = true)).expandX().fillX().row()
+        topTable.addSeparator(Color.DARK_GRAY, height = 1f)
+        
+        topTable.add(ExpanderTab("Map Options") {
+            it.add(mapOptionsTable).row()
+        }).expandX().fillX().row()
+        topTable.addSeparator(Color.DARK_GRAY, height = 1f)
+
+        (playerPickerTable.playerListTable.parent as ScrollPane).setScrollingDisabled(true,true)
+        topTable.add(ExpanderTab("Civilizations") {
+            it.add(playerPickerTable).row()
+        }).expandX().fillX().row()
+    }
+
     private fun newGameThread() {
         try {
             newGame = GameStarter.startNewGame(gameSetupInfo)
         } catch (exception: Exception) {
             Gdx.app.postRunnable {
-                val cantMakeThatMapPopup = Popup(this)
-                cantMakeThatMapPopup.addGoodSizedLabel("It looks like we can't make a map with the parameters you requested!".tr()).row()
-                cantMakeThatMapPopup.addGoodSizedLabel("Maybe you put too many players into too small a map?".tr()).row()
-                cantMakeThatMapPopup.addCloseButton()
-                cantMakeThatMapPopup.open()
+                Popup(this).apply {
+                    addGoodSizedLabel("It looks like we can't make a map with the parameters you requested!".tr()).row()
+                    addGoodSizedLabel("Maybe you put too many players into too small a map?".tr()).row()
+                    addCloseButton()
+                    open()
+                }
                 Gdx.input.inputProcessor = stage
                 rightSideButton.enable()
                 rightSideButton.setText("Start game!".tr())
@@ -168,10 +211,11 @@ class NewGameScreen(private val previousScreen: CameraStageBaseScreen, _gameSetu
                 GameSaver.saveGame(newGame!!, newGame!!.gameId, true)
             } catch (ex: Exception) {
                 Gdx.app.postRunnable {
-                    val cantUploadNewGamePopup = Popup(this)
-                    cantUploadNewGamePopup.addGoodSizedLabel("Could not upload game!")
-                    cantUploadNewGamePopup.addCloseButton()
-                    cantUploadNewGamePopup.open()
+                    Popup(this).apply {
+                        addGoodSizedLabel("Could not upload game!")
+                        addCloseButton()
+                        open()
+                    }
                 }
                 newGame = null
             }

@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter.DigitsOnlyFi
 import com.unciv.Constants
 import com.unciv.UncivGame
 import com.unciv.logic.map.*
-import com.unciv.models.translations.tr
 import com.unciv.ui.utils.*
 
 /** Table for editing [mapParameters]
@@ -17,31 +16,38 @@ import com.unciv.ui.utils.*
  *
  *  @param isEmptyMapAllowed whether the [MapType.empty] option should be present. Is used by the Map Editor, but should **never** be used with the New Game
  * */
-class MapParametersTable(val mapParameters: MapParameters, val isEmptyMapAllowed: Boolean = false):
-    Table() {
+class MapParametersTable(
+    private val mapParameters: MapParameters,
+    private val isEmptyMapAllowed: Boolean = false
+) : Table() {
+    // These are accessed fom outside the class to read _and_ write values,
+    // namely from MapOptionsTable, NewMapScreen and NewGameScreen
     lateinit var mapTypeSelectBox: TranslatedSelectBox
-    lateinit var worldSizeSelectBox: TranslatedSelectBox
-    private var customWorldSizeTable = Table ()
-    private var hexagonalSizeTable = Table()
-    private var rectangularSizeTable = Table()
-    lateinit var noRuinsCheckbox: CheckBox
-    lateinit var noNaturalWondersCheckbox: CheckBox
-    lateinit var worldWrapCheckbox: CheckBox
     lateinit var customMapSizeRadius: TextField
     lateinit var customMapWidth: TextField
     lateinit var customMapHeight: TextField
 
+    private lateinit var worldSizeSelectBox: TranslatedSelectBox
+    private var customWorldSizeTable = Table ()
+    private var hexagonalSizeTable = Table()
+    private var rectangularSizeTable = Table()
+    private lateinit var noRuinsCheckbox: CheckBox
+    private lateinit var noNaturalWondersCheckbox: CheckBox
+    private lateinit var worldWrapCheckbox: CheckBox
+
+    // Keep references (in the key) and settings value getters (in the value) of the 'advanced' sliders
+    // in a HashMap for reuse later - in the reset to defaults button. Better here as field than as closure.
+    // A HashMap indexed on a Widget is problematic, as it does not define its own hashCode and equals
+    // overrides nor is a Widget a data class. Seems to work anyway.  
+    private val advancedSliders = HashMap<UncivSlider, ()->Float>()
 
     init {
         skin = CameraStageBaseScreen.skin
-        defaults().pad(5f)
+        defaults().pad(5f, 10f)
         addMapShapeSelectBox()
         addMapTypeSelectBox()
         addWorldSizeTable()
-        addNoRuinsCheckbox()
-        addNoNaturalWondersCheckbox()
-        if (UncivGame.Current.settings.showExperimentalWorldWrap)
-            addWorldWrapCheckbox()
+        addWrappedCheckBoxes()
         addAdvancedSettings()
     }
 
@@ -62,7 +68,7 @@ class MapParametersTable(val mapParameters: MapParameters, val isEmptyMapAllowed
     }
 
     private fun addMapTypeSelectBox() {
-
+        // MapType is not an enum so we can't simply enumerate. //todo: make it so!
         val mapTypes = listOfNotNull(
             MapType.default,
             MapType.pangaea,
@@ -154,61 +160,49 @@ class MapParametersTable(val mapParameters: MapParameters, val isEmptyMapAllowed
             mapParameters.mapSize = MapSizeNew(worldSizeSelectBox.selected.value)
     }
 
-    private fun addNoRuinsCheckbox() {
-        noRuinsCheckbox = CheckBox("No Ancient Ruins".tr(), skin)
-        noRuinsCheckbox.isChecked = mapParameters.noRuins
-        noRuinsCheckbox.onChange { mapParameters.noRuins = noRuinsCheckbox.isChecked }
-        add(noRuinsCheckbox).colspan(2).left().row()
+    private fun Table.addNoRuinsCheckbox() {
+        noRuinsCheckbox = "No Ancient Ruins".toCheckBox(mapParameters.noRuins) {
+            mapParameters.noRuins = it
+        }
+        add(noRuinsCheckbox).row()
     }
 
-    private fun addNoNaturalWondersCheckbox() {
-        noNaturalWondersCheckbox = CheckBox("No Natural Wonders".tr(), skin)
-        noNaturalWondersCheckbox.isChecked = mapParameters.noNaturalWonders
-        noNaturalWondersCheckbox.onChange {
-            mapParameters.noNaturalWonders = noNaturalWondersCheckbox.isChecked
+    private fun Table.addNoNaturalWondersCheckbox() {
+        noNaturalWondersCheckbox = "No Natural Wonders".toCheckBox(mapParameters.noNaturalWonders) {
+            mapParameters.noNaturalWonders = it
         }
-        add(noNaturalWondersCheckbox).colspan(2).left().row()
+        add(noNaturalWondersCheckbox).row()
     }
 
-    private fun addWorldWrapCheckbox() {
-        worldWrapCheckbox = CheckBox("World Wrap".tr(), skin)
-        worldWrapCheckbox.isChecked = mapParameters.worldWrap
-        worldWrapCheckbox.onChange {
-            mapParameters.worldWrap = worldWrapCheckbox.isChecked
+    private fun Table.addWorldWrapCheckbox() {
+        worldWrapCheckbox = "World Wrap".toCheckBox(mapParameters.worldWrap) {
+            mapParameters.worldWrap = it
         }
-        add(worldWrapCheckbox).colspan(2).left().row()
-        add("World wrap maps are very memory intensive - creating large world wrap maps on Android can lead to crashes!"
+        add(worldWrapCheckbox).row()
+    }
+
+    private fun addWrappedCheckBoxes() {
+        val showWorldWrap = UncivGame.Current.settings.showExperimentalWorldWrap
+        add(Table(skin).apply {
+            defaults().left().pad(2.5f)
+            addNoRuinsCheckbox()
+            addNoNaturalWondersCheckbox()
+            if (showWorldWrap) addWorldWrapCheckbox()
+        }).colspan(2).center().row()
+        if (showWorldWrap)
+            add("World wrap maps are very memory intensive - creating large world wrap maps on Android can lead to crashes!"
                 .toLabel(fontSize = 14).apply { wrap=true }).colspan(2).fillX().row()
     }
 
     private fun addAdvancedSettings() {
-
-        val advancedSettingsTable = getAdvancedSettingsTable()
-
-        val button = "Show advanced settings".toTextButton()
-
-        add(button).colspan(2).row()
-        val advancedSettingsCell = add(Table()).colspan(2)
-        row()
-
-        button.onClick {
-            advancedSettingsTable.isVisible = !advancedSettingsTable.isVisible
-
-            if (advancedSettingsTable.isVisible) {
-                button.setText("Hide advanced settings".tr())
-                advancedSettingsCell.setActor(advancedSettingsTable)
-            } else {
-                button.setText("Show advanced settings".tr())
-                advancedSettingsCell.setActor(Table())
-            }
+        val expander = ExpanderTab("Advanced Settings", startsOutOpened = false) {
+            addAdvancedControls(it)
         }
-
+        add(expander).pad(0f).padTop(10f).colspan(2).growX().row()
     }
 
-    private fun getAdvancedSettingsTable(): Table {
-
-        val advancedSettingsTable = Table()
-            .apply {isVisible = false; defaults().pad(5f)}
+    private fun addAdvancedControls(table: Table) {
+        table.defaults().pad(5f)
 
         val seedTextField = TextField(mapParameters.seed.toString(), skin)
         seedTextField.textFieldFilter = DigitsOnlyFilter()
@@ -222,17 +216,15 @@ class MapParametersTable(val mapParameters: MapParameters, val isEmptyMapAllowed
             }
         }
 
-        advancedSettingsTable.add("RNG Seed".toLabel()).left()
-        advancedSettingsTable.add(seedTextField).fillX().row()
-
-        val sliders = HashMap<UncivSlider, ()->Float>()
+        table.add("RNG Seed".toLabel()).left()
+        table.add(seedTextField).fillX().padBottom(10f).row()
 
         fun addSlider(text: String, getValue:()->Float, min:Float, max:Float, onChange: (value:Float)->Unit): UncivSlider {
             val slider = UncivSlider(min, max, (max - min) / 20, onChange = onChange)
             slider.value = getValue()
-            advancedSettingsTable.add(text.toLabel()).left()
-            advancedSettingsTable.add(slider).fillX().row()
-            sliders[slider] = getValue
+            table.add(text.toLabel()).left()
+            table.add(slider).fillX().row()
+            advancedSliders[slider] = getValue
             return slider
         }
 
@@ -264,10 +256,9 @@ class MapParametersTable(val mapParameters: MapParameters, val isEmptyMapAllowed
         resetToDefaultButton.onClick {
             mapParameters.resetAdvancedSettings()
             seedTextField.text = mapParameters.seed.toString()
-            for (entry in sliders)
+            for (entry in advancedSliders)
                 entry.key.value = entry.value()
         }
-        advancedSettingsTable.add(resetToDefaultButton).colspan(2).row()
-        return advancedSettingsTable
+        table.add(resetToDefaultButton).colspan(2).padTop(10f).row()
     }
 }

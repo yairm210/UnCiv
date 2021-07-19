@@ -6,20 +6,21 @@ import com.unciv.UncivGame
 import com.unciv.ui.utils.*
 import com.unciv.ui.utils.AutoScrollPane as ScrollPane
 
-open class PickerScreen(val disableScroll: Boolean = false) : CameraStageBaseScreen() {
+open class PickerScreen(disableScroll: Boolean = false) : CameraStageBaseScreen() {
 
     internal var closeButton: TextButton = Constants.close.toTextButton()
     protected var descriptionLabel: Label
-    protected var rightSideGroup = VerticalGroup()
+    private var rightSideGroup = VerticalGroup()
     protected var rightSideButton: TextButton
-    protected var screenSplit = 0.85f
+    private val screenSplit = 0.85f
+    private val maxBottomTableHeight = 150f     // about 7 lines of normal text
 
     /**
      * The table displaying the choices from which to pick (usually).
      * Also the element which most of the screen realestate is devoted to displaying.
      */
     protected var topTable: Table
-    var bottomTable:Table = Table()
+    protected var bottomTable:Table = Table()
     internal var splitPane: SplitPane
     protected var scrollPane: ScrollPane
 
@@ -36,16 +37,16 @@ open class PickerScreen(val disableScroll: Boolean = false) : CameraStageBaseScr
         rightSideGroup.addActor(rightSideButton)
 
         bottomTable.add(rightSideGroup).pad(10f).right()
-        bottomTable.height = stage.height * (1 - screenSplit)
+        bottomTable.height = (stage.height * (1 - screenSplit)).coerceAtMost(maxBottomTableHeight)
 
         topTable = Table()
         scrollPane = ScrollPane(topTable)
 
         scrollPane.setScrollingDisabled(disableScroll, disableScroll)
-        scrollPane.setSize(stage.width, stage.height * screenSplit)
+        scrollPane.setSize(stage.width, stage.height - bottomTable.height)
 
         splitPane = SplitPane(scrollPane, bottomTable, true, skin)
-        splitPane.splitAmount = screenSplit
+        splitPane.splitAmount = scrollPane.height / stage.height
         splitPane.setFillParent(true)
         stage.addActor(splitPane)
     }

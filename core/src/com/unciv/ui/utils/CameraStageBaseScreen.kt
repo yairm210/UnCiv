@@ -101,9 +101,13 @@ open class CameraStageBaseScreen : Screen {
         keyPressDispatcher[KeyCharAndCode.BACK] = action
     }
 
+    /** @return `true` if the screen is higher than it is wide */
     fun isPortrait() = stage.viewport.screenHeight > stage.viewport.screenWidth
+    /** @return `true` if the screen is higher than it is wide _and_ resolution is at most 1050x700 */
     fun isCrampedPortrait() = isPortrait() &&
             game.settings.resolution.split("x").map { it.toInt() }.last() <= 700
+    /** @return `true` if the screen is narrower than 4:3 landscape */
+    fun isNarrowerThan4to3() = stage.viewport.screenHeight * 4 > stage.viewport.screenWidth * 3
 
     fun openOptionsPopup() {
         val limitOrientationsHelper = game.limitOrientationsHelper

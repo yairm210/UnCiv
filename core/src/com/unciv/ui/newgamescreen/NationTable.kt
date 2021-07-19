@@ -41,7 +41,7 @@ class NationTable(val nation: Nation, width: Float, minHeight: Float, ruleset: R
         val titleText = if (ruleset == null || nation.name== Constants.random || nation.name==Constants.spectator)
             nation.name else nation.getLeaderDisplayName()
         val leaderDisplayLabel = titleText.toLabel(nation.getInnerColor(), 24)
-        val leaderDisplayNameMaxWidth = internalWidth - 80 // for the nation indicator
+        val leaderDisplayNameMaxWidth = internalWidth - 90f // 70 for the nation indicator + 20 extra
         if (leaderDisplayLabel.width > leaderDisplayNameMaxWidth) { // for instance Polish has really long [x] of [y] translations
             leaderDisplayLabel.wrap = true
             titleTable.add(leaderDisplayLabel).width(leaderDisplayNameMaxWidth)

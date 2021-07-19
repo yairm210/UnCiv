@@ -192,8 +192,8 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
                 autoSaveThread.join()
             } else
                 GameSaver.autoSaveSingleThreaded(gameInfo)      // NO new thread
-            settings.save()
         }
+        settings.save()
 
         threadList.filter { it !== Thread.currentThread() && it.name != "DestroyJavaVM"}.forEach {
             println ("    Thread ${it.name} still running in UncivGame.dispose().")

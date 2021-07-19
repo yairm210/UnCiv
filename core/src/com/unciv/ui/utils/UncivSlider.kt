@@ -71,6 +71,9 @@ class UncivSlider (
         }
     val isDragging: Boolean
         get() = slider.isDragging
+    var isDisabled: Boolean
+        get() = slider.isDisabled
+        set(value) { slider.isDisabled = value }
 
     // Value tip format
     var tipFormat = "%.1f"
