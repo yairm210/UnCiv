@@ -43,8 +43,8 @@ class CityInfoReligionManager: Counter<String>() {
         val followersPerReligion = getNumberOfFollowers()
         if (followersPerReligion.isEmpty()) return null
         val religionWithMaxFollowers = followersPerReligion.maxByOrNull { it.value }!!
-        if (religionWithMaxFollowers.value >= cityInfo.population.population) return religionWithMaxFollowers.key
-        else return null
+        return if (religionWithMaxFollowers.value >= cityInfo.population.population) religionWithMaxFollowers.key
+        else null
     }
 
     fun getAffectedBySurroundingCities() {

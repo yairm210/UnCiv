@@ -10,6 +10,7 @@
         "startingMilitaryUnitCount": 1,
         "startingMilitaryUnit": "Warrior",
         "settlerPopulation": 1,
+        "faithUnitCost": 200,
         "iconRGB": [255, 87, 35]
     },
     {
@@ -22,6 +23,7 @@
         "startingGold": 10,
         "startingCulture": 100,
         "settlerPopulation": 1,
+        "faithUnitCost": 200,
         "iconRGB": [233, 31, 99]
     },
     {
@@ -36,6 +38,7 @@
         "settlerPopulation": 1,
         "settlerBuildings": ["Shrine","Monument"],
         "startingObsoleteWonders": ["Temple of Artemis", "Stonehenge", "The Great Library", "Mausoleum of Halicarnassus", "The Pyramids", "Statue of Zeus"],
+        "faithUnitCost": 200,
         "iconRGB": [157, 39, 176]
     },
     {
@@ -51,6 +54,7 @@
         "settlerBuildings": ["Shrine","Monument","Granary","Lighthouse"],
         "startingObsoleteWonders": ["Temple of Artemis", "Stonehenge", "The Great Library", "Mausoleum of Halicarnassus", "The Pyramids", "Statue of Zeus", 
             "The Great Lighthouse", "Hanging Gardens", "Terracotta Army", "The Oracle", "Petra", "Great Wall", "Colossus"],
+        "faithUnitCost": 300,
         "iconRGB": [104, 58, 183]
     },
     {
@@ -67,6 +71,7 @@
         "startingObsoleteWonders": ["Temple of Artemis", "Stonehenge", "The Great Library", "Mausoleum of Halicarnassus", "The Pyramids", "Statue of Zeus",
             "The Great Lighthouse", "Hanging Gardens", "Terracotta Army", "The Oracle", "Petra", "Great Wall", "Colossus",
             "Hagia Sophia", "Chichen Itza", "Machu Picchu", "Angkor Wat", "Alhambra", "Notre Dame"],
+        "faithUnitCost": 400,
         "iconRGB": [63, 81, 182]
     },
     {
@@ -84,6 +89,7 @@
             "The Great Lighthouse", "Hanging Gardens", "Terracotta Army", "The Oracle", "Petra", "Great Wall", "Colossus",
             "Hagia Sophia", "Chichen Itza", "Machu Picchu", "Angkor Wat", "Alhambra", "Notre Dame", 
             "Sistine Chapel", "Forbidden Palace", "Leaning Tower of Pisa", "Himeji Castle", "Taj Mahal", "Porcelain Tower", "Kremlin"],
+        "faithUnitCost": 600,
         "iconRGB": [33, 150, 243]
     },
     {
@@ -102,6 +108,7 @@
             "Hagia Sophia", "Chichen Itza", "Machu Picchu", "Angkor Wat", "Alhambra", "Notre Dame", 
             "Sistine Chapel", "Forbidden Palace", "Leaning Tower of Pisa", "Himeji Castle", "Taj Mahal", "Porcelain Tower", "Kremlin",
             "The Louvre", "Big Ben", "Brandenburg Gate"],
+        "faithUnitCost": 800,
         "iconRGB": [0, 150, 136]
     },
     {
@@ -121,6 +128,7 @@
             "Sistine Chapel", "Forbidden Palace", "Leaning Tower of Pisa", "Himeji Castle", "Taj Mahal", "Porcelain Tower", "Kremlin",
             "The Louvre", "Big Ben", "Brandenburg Gate",
             "Eiffel Tower", "Statue of Liberty", "Neuschwanstein", "Cristo Redentor"],
+        "faithUnitCost": 1000,
         // So theoretically this is always just all the wonders at least 2 eras old. So we could just use that. 
         // But where is the modularity? The excluding of very specific wonders? That is no fun.
         // So we just write down the entire long list (sorted by era!) instead.
@@ -145,6 +153,7 @@
             "Sistine Chapel", "Forbidden Palace", "Leaning Tower of Pisa", "Himeji Castle", "Taj Mahal", "Porcelain Tower", "Kremlin",
             "The Louvre", "Big Ben", "Brandenburg Gate",
             "Eiffel Tower", "Statue of Liberty", "Neuschwanstein", "Cristo Redentor"],
+        "faithUnitCost": 1000,
         "iconRGB": [76, 176, 81]
     }
 ]

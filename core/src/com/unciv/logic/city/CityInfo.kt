@@ -542,6 +542,9 @@ class CityInfo {
             "in all cities with a world wonder" -> cityConstructions.getBuiltBuildings().any { it.isWonder }
             "in all cities connected to capital" -> isConnectedToCapital()
             "in all cities with a garrison" -> getCenterTile().militaryUnit != null
+            "in all cities in which the majority religion is a major religion" -> 
+                religion.getMajorityReligion() != null
+                && civInfo.gameInfo.religions[religion.getMajorityReligion()]!!.isMajorReligion()
             else -> false
         }
     }

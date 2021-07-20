@@ -1478,7 +1478,7 @@
 		"name": "Great Prophet",
 		"unitType": "Civilian",
 		"uniques": ["Can construct [Holy site] if it hasn't spread religion yet", "Can spread religion [4] times",
-			"May found a religion", "Great Person - [Faith]", "Unbuildable"],
+			"May found a religion", "Great Person - [Faith]", "Unbuildable", "Religious Unit"],
 		"movement": 2
 	},
 	{
@@ -1496,6 +1496,16 @@
 		"uniques": ["Can start an [8]-turn golden age","Bonus for units in 2 tile radius 15%",
 			"Heal adjacent units for an additional 15 HP per turn", "Can construct [Citadel]", "Great Person - [War]", "Unbuildable"],
 		"movement": 5
+	},
+	
+	/* Religious units */
+	
+	{
+		"name": "Missionary",
+		"unitType": "Civilian",
+		"uniques": ["Can spread religion [2] times", "Can be purchased with Faith [in all cities in which the majority religion is a major religion]", 
+			"Unbuildable", "Religious Unit"],
+		"movement": 4
 	}
 
 	/* Spaceship Parts */

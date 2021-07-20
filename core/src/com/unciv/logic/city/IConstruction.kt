@@ -8,11 +8,13 @@ import kotlin.math.roundToInt
 interface IConstruction : INamed {
     fun getProductionCost(civInfo: CivilizationInfo): Int
     fun getGoldCost(civInfo: CivilizationInfo): Int
+    fun getFaithCost(civInfo: CivilizationInfo): Int
     fun isBuildable(cityConstructions: CityConstructions): Boolean
     fun shouldBeDisplayed(cityConstructions: CityConstructions): Boolean
     fun postBuildEvent(cityConstructions: CityConstructions, wasBought: Boolean = false): Boolean  // Yes I'm hilarious.
     fun getResourceRequirements(): HashMap<String,Int>
     fun canBePurchased(): Boolean
+    fun canBePurchasedWithFaith(cityInfo: CityInfo): Boolean
 }
 
 
@@ -52,9 +54,12 @@ open class PerpetualConstruction(override var name: String, val description: Str
 
     override fun canBePurchased() = false
 
+    override fun canBePurchasedWithFaith(cityInfo: CityInfo) = false
+
     override fun getProductionCost(civInfo: CivilizationInfo) = throw Exception("Impossible!")
 
     override fun getGoldCost(civInfo: CivilizationInfo) = throw Exception("Impossible!")
+    override fun getFaithCost(civInfo: CivilizationInfo) = throw Exception("Impossible!")
 
     override fun isBuildable(cityConstructions: CityConstructions): Boolean =
             throw Exception("Impossible!")

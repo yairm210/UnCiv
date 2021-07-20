@@ -18,6 +18,7 @@ class Era : INamed {
     var settlerPopulation = 1
     var settlerBuildings = ArrayList<String>()
     var startingObsoleteWonders = ArrayList<String>()
+    var faithUnitCost = 200
     var iconRGB: List<Int>? = null
     
     fun getStartingUnits(): List<String> {

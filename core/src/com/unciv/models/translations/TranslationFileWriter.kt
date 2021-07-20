@@ -262,6 +262,7 @@ object TranslationFileWriter {
                                     || parameter == "in all cities with a world wonder"
                                     || parameter == "in all cities connected to capital"
                                     || parameter == "in all cities with a garrison"
+                                    || parameter == "in all cities in which the majority religion is a major religion"
                             -> "cityFilter"
                             else -> "param"
                         }

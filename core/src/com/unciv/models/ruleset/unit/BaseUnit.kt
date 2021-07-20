@@ -2,6 +2,7 @@ package com.unciv.models.ruleset.unit
 
 import com.unciv.Constants
 import com.unciv.logic.city.CityConstructions
+import com.unciv.logic.city.CityInfo
 import com.unciv.logic.city.IConstruction
 import com.unciv.logic.civilization.CivilizationInfo
 import com.unciv.logic.map.MapUnit
@@ -175,6 +176,9 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
     }
 
     override fun canBePurchased() = "Cannot be purchased" !in uniques
+    override fun canBePurchasedWithFaith(cityInfo: CityInfo) =
+        "Can be purchased with Faith" in uniques
+        || uniqueObjects.filter { it.placeholderText == "Can be purchased with Faith []"}.any { cityInfo.matchesFilter(it.params[0]) }
 
     override fun getProductionCost(civInfo: CivilizationInfo): Int {
         var productionCost = cost.toFloat()
@@ -189,6 +193,7 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
     fun getBaseGoldCost(civInfo: CivilizationInfo): Double {
         return (30.0 * cost).pow(0.75) * (1 + hurryCostModifier / 100f) * civInfo.gameInfo.gameParameters.gameSpeed.modifier
     }
+
 
     override fun getGoldCost(civInfo: CivilizationInfo): Int {
         var cost = getBaseGoldCost(civInfo)
@@ -206,6 +211,14 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
         return (cost / 10).toInt() * 10 // rounded down to nearest ten
     }
 
+    override fun getFaithCost(civInfo: CivilizationInfo): Int {
+        if (uniques.contains("Can be purchased with Faith")
+            || uniqueObjects.any { it.placeholderText == "Can be purchased with Faith []" }
+        ) 
+           return civInfo.gameInfo.ruleSet.eras[civInfo.getEra()]!!.faithUnitCost
+        return -1
+    }
+
     fun getDisbandGold(civInfo: CivilizationInfo) = getBaseGoldCost(civInfo).toInt() / 20
 
     override fun shouldBeDisplayed(construction: CityConstructions): Boolean {
@@ -213,6 +226,7 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
         return rejectionReason == ""
                 || rejectionReason.startsWith("Requires")
                 || rejectionReason.startsWith("Consumes")
+                || rejectionReason == "Can only be purchased with Faith"
     }
 
     fun getRejectionReason(cityConstructions: CityConstructions): String {
@@ -226,7 +240,11 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
                 return "Should not be displayed"
         }
         val civRejectionReason = getRejectionReason(civInfo)
-        if (civRejectionReason != "") return civRejectionReason
+        if (civRejectionReason != "") {
+            if (civRejectionReason == "Unbuildable" && canBePurchasedWithFaith(cityConstructions.cityInfo))
+                return "Can only be purchased with Faith"
+            return civRejectionReason
+        }
         for (unique in uniqueObjects.filter { it.placeholderText == "Requires at least [] population" })
             if (unique.params[0].toInt() > cityConstructions.cityInfo.population.population)
                 return unique.text
@@ -281,6 +299,10 @@ class BaseUnit : INamed, IConstruction, CivilopediaText() {
         if (wasBought && !civInfo.gameInfo.gameParameters.godMode && !unit.hasUnique("Can move immediately once bought"))
             unit.currentMovement = 0f
 
+        if (unit.hasUnique("Religious Unit")) {
+            unit.religion = cityConstructions.cityInfo.religion.getMajorityReligion()
+        }
+        
         if (this.unitType.isCivilian()) return true // tiny optimization makes save files a few bytes smaller
 
         var XP = cityConstructions.getBuiltBuildings().sumBy { it.xpForNewUnits }

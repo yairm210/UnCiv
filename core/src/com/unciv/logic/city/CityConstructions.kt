@@ -477,14 +477,23 @@ class CityConstructions {
      *                          Note: -1 does not guarantee queue will remain unchanged (validation)
      *  @param automatic        Flag whether automation should try to choose what next to build (not coming from UI)
      *                          Note: settings.autoAssignCityProduction is handled later
+     *  @param withFaith        Flag whether the purchase was made with faith or gold. False = gold, true = faith.
      *  @return                 Success (false e.g. unit cannot be placed
      */
-    fun purchaseConstruction(constructionName: String, queuePosition: Int, automatic: Boolean): Boolean {
+    fun purchaseConstruction(
+        constructionName: String, 
+        queuePosition: Int, 
+        automatic: Boolean, 
+        withFaith: Boolean = false
+    ): Boolean {
         if (!getConstruction(constructionName).postBuildEvent(this, true))
             return false // nothing built - no pay
 
-        if (!cityInfo.civInfo.gameInfo.gameParameters.godMode)
-            cityInfo.civInfo.addGold(-getConstruction(constructionName).getGoldCost(cityInfo.civInfo))
+        if (!cityInfo.civInfo.gameInfo.gameParameters.godMode) {
+            if (!withFaith)
+                cityInfo.civInfo.addGold(-getConstruction(constructionName).getGoldCost(cityInfo.civInfo))
+            else cityInfo.civInfo.religionManager.storedFaith -= getConstruction(constructionName).getFaithCost(cityInfo.civInfo)
+        }
 
         if (queuePosition in 0 until constructionQueue.size)
             removeFromQueue(queuePosition, automatic)

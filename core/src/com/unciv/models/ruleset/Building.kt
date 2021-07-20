@@ -169,7 +169,7 @@ class Building : NamedStats(), IConstruction, ICivilopediaText {
 
         if (!isWonder)
             for (unique in city.getMatchingUniques("[] from all [] buildings")) {
-                if (isStatRelated(Stat.valueOf(unique.params[1])))
+                if (matchesFilter(unique.params[1]))
                     stats.add(unique.stats)
             }
         else
@@ -325,6 +325,9 @@ class Building : NamedStats(), IConstruction, ICivilopediaText {
         return !isAnyWonder() && "Cannot be purchased" !in uniques
     }
 
+    override fun canBePurchasedWithFaith(cityInfo: CityInfo) =
+        "Can be purchased with Faith" in uniques
+        || uniqueObjects.filter { it.placeholderText == "Can be purchased with Faith []"}.any { cityInfo.matchesFilter(it.params[0]) }
 
     override fun getProductionCost(civInfo: CivilizationInfo): Int {
         var productionCost = cost.toFloat()
@@ -354,13 +357,17 @@ class Building : NamedStats(), IConstruction, ICivilopediaText {
             cost *= 1 - (unique.params[0].toFloat() / 100)
 
         for (unique in civInfo.getMatchingUniques("Cost of purchasing [] buildings reduced by []%")) {
-            if (isStatRelated(Stat.valueOf(unique.params[0])))
+            if (matchesFilter(unique.params[0]))
                 cost *= 1 - (unique.params[1].toFloat() / 100)
         }
 
         return (cost / 10).toInt() * 10
     }
 
+    override fun getFaithCost(civInfo: CivilizationInfo): Int {
+        if (uniques.contains("Can be purchased with Faith")) return civInfo.gameInfo.ruleSet.eras[civInfo.getEra()]!!.faithUnitCost
+        return -1
+    }
 
     override fun shouldBeDisplayed(cityConstructions: CityConstructions): Boolean {
         if (cityConstructions.isBeingConstructedOrEnqueued(name))
@@ -370,12 +377,18 @@ class Building : NamedStats(), IConstruction, ICivilopediaText {
                 || rejectionReason.startsWith("Requires")
                 || rejectionReason.startsWith("Consumes")
                 || rejectionReason.endsWith("Wonder is being built elsewhere")
+                || rejectionReason == "Can only be purchased with Faith"
     }
 
     fun getRejectionReason(construction: CityConstructions): String {
         if (construction.isBuilt(name)) return "Already built"
         // for buildings that are created as side effects of other things, and not directly built
-        if (uniques.contains("Unbuildable")) return "Unbuildable"
+        // unless they can be bought with faith
+        if (uniques.contains("Unbuildable")) {
+            if (canBePurchasedWithFaith(construction.cityInfo))
+                return "Can only be purchased with Faith"
+            return "Unbuildable"
+        }
 
         val cityCenter = construction.cityInfo.getCenterTile()
         val civInfo = construction.cityInfo.civInfo
@@ -586,6 +599,7 @@ class Building : NamedStats(), IConstruction, ICivilopediaText {
             replaces -> true
             else -> {
                 if (uniques.contains(filter)) return true
+                if (isStats(filter) && isStatRelated(Stat.valueOf(filter))) return true
                 return false
             }
         }

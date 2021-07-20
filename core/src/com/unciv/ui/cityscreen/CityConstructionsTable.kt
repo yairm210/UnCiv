@@ -71,6 +71,9 @@ class CityConstructionsTable(val cityScreen: CityScreen) : Table(CameraStageBase
         buttons.clear()
         buttons.add(getQueueButton(construction)).padRight(5f)
         buttons.add(getBuyButton(construction))
+        val faithButton = getBuyWithFaithButton(construction)
+        if (faithButton != null)
+            buttons.add(faithButton)
     }
 
     private fun updateConstructionQueue() {
@@ -377,9 +380,9 @@ class CityConstructionsTable(val cityScreen: CityScreen) : Table(CameraStageBase
         }
     }
 
-    fun purchaseConstruction(construction: IConstruction) {
+    fun purchaseConstruction(construction: IConstruction, usingFaith: Boolean = false) {
         val city = cityScreen.city
-        if (!city.cityConstructions.purchaseConstruction(construction.name, selectedQueueEntry, false)) {
+        if (!city.cityConstructions.purchaseConstruction(construction.name, selectedQueueEntry, false, usingFaith)) {
             Popup(cityScreen).apply {
                 add("No space available to place [${construction.name}] near [${city.name}]".tr()).row()
                 addCloseButton()
@@ -426,6 +429,43 @@ class CityConstructionsTable(val cityScreen: CityScreen) : Table(CameraStageBase
                     || !city.canPurchase(construction)
                     || (constructionGoldCost > city.civInfo.gold && !city.civInfo.gameInfo.gameParameters.godMode))
                 button.disable()
+        }
+
+        button.labelCell.pad(5f)
+
+        return button
+    }
+    
+    private fun getBuyWithFaithButton(construction: IConstruction?): TextButton? {
+        val city = cityScreen.city
+
+        val button = "".toTextButton()
+
+        if (construction == null || construction is PerpetualConstruction ||
+            (!construction.canBePurchasedWithFaith(city) && !city.civInfo.gameInfo.gameParameters.godMode)) {
+            return null
+        } else {
+            val constructionFaithCost = construction.getFaithCost(city.civInfo)
+            button.setText("Buy".tr() + " " + constructionFaithCost)
+            button.add(ImageGetter.getStatIcon(Stat.Faith.name)).size(20f).padBottom(2f)
+
+            button.onClick(UncivSound.Choir) {
+                button.disable()
+                cityScreen.closeAllPopups()
+
+                val purchasePrompt = "Currently you have [${city.civInfo.religionManager.storedFaith}] Faith.".tr() + "\n" +
+                        "Would you like to purchase [${construction.name}] for [$constructionFaithCost] Faith?".tr()
+                YesNoPopup(purchasePrompt, { purchaseConstruction(construction) }, cityScreen, { cityScreen.update() }).open()
+            }
+
+            if (!cityScreen.canChangeState
+                || city.isPuppet 
+                || city.isInResistance()
+                || !city.canPurchase(construction)
+                || (constructionFaithCost > city.civInfo.religionManager.storedFaith && !city.civInfo.gameInfo.gameParameters.godMode)) {
+                button.disable()
+                println("${!cityScreen.canChangeState} ${city.isPuppet} ${city.isInResistance()} ${!city.canPurchase(construction)} ${(constructionFaithCost > city.civInfo.religionManager.storedFaith && !city.civInfo.gameInfo.gameParameters.godMode)}")
+            }
         }
 
         button.labelCell.pad(5f)
