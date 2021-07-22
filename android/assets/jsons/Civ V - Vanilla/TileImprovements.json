@@ -206,7 +206,7 @@
 		"uniqueTo": "Polynesia",
 		"culture": 1,
 		"turnsToBuild": 4,
-		"uniques": ["[+1 Culture] for each adjacent [Moai]", "Can only be built on Coastal tiles", "[+1 Gold] once [Flight] is discovered"],
+		"uniques": ["[+1 Culture] for each adjacent [Moai]", "Can only be built on [Coastal] tiles", "[+1 Gold] once [Flight] is discovered"],
 		"techRequired": "Construction",
 		"shortcutKey": "M"
 	},
@@ -216,7 +216,7 @@
 		"terrainsCanBeBuiltOn": ["Hill"],
 		"food": 1,
 		"turnsToBuild": 7,
-		"uniques": ["[+1 Food] for each adjacent [Mountain]", "Cannot be built on bonus resource",
+		"uniques": ["[+1 Food] for each adjacent [Mountain]", "Cannot be built on [Bonus resource] tiles",
 			"[+1 Food] on [Fresh water] tiles once [Civil Service] is discovered",
 			"[+1 Food] on [non-fresh water] tiles once [Fertilizer] is discovered"],
 		"techRequired": "Construction",

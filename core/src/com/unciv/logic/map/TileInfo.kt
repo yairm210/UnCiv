@@ -397,8 +397,10 @@ open class TileInfo {
         return when {
             improvement.name == this.improvement -> false
             isCityCenter() -> false
-            "Cannot be built on bonus resource" in improvement.uniques && resource != null
+            // deprecated as of 3.15.15
+                "Cannot be built on bonus resource" in improvement.uniques && resource != null
                     && getTileResource().resourceType == ResourceType.Bonus -> false
+            //
             improvement.uniqueObjects.filter { it.placeholderText == "Cannot be built on [] tiles" }.any {
                     unique -> matchesTerrainFilter(unique.params[0])
             } -> false
@@ -425,10 +427,12 @@ open class TileInfo {
             topTerrain.unbuildable && !improvement.isAllowedOnFeature(topTerrain.name) -> false
             // DO NOT reverse this &&. isAdjacentToFreshwater() is a lazy which calls a function, and reversing it breaks the tests.
             improvement.hasUnique("Can also be built on tiles adjacent to fresh water") && isAdjacentToFreshwater -> true
-            "Can only be built on Coastal tiles" in improvement.uniques && isCoastalTile() -> true
-            improvement.uniqueObjects.filter { it.placeholderText == "Can only be built on [] tiles" }.any {
-                unique -> !matchesTerrainFilter(unique.params[0])
-            } -> false
+            // deprecated as of 3.15.15
+                "Can only be built on Coastal tiles" in improvement.uniques && isCoastalTile() -> true
+            //
+            improvement.uniqueObjects.filter { it.placeholderText == "Can only be built on [] tiles" }.all {
+                unique -> matchesTerrainFilter(unique.params[0])
+            } -> true
             else -> resourceIsVisible && getTileResource().improvement == improvement.name
         }
     }
@@ -462,11 +466,16 @@ open class TileInfo {
             else -> {
                 if (terrainFeatures.contains(filter)) return true
                 if (hasUnique(filter)) return true
+                // Resource type check is last - cannot succeed if no resource here
+                if (resource == null) return false
                 // Checks 'luxury resource', 'strategic resource' and 'bonus resource' - only those that are visible of course
-                if (observingCiv != null && hasViewableResource(observingCiv) 
-                    && getTileResource().resourceType.name + " resource" == filter) 
-                        return true
-                return false
+                // not using hasViewableResource as observingCiv is often not passed in,
+                // and we want to be able to at least test for non-strategic in that case.
+                val resourceObject = getTileResource()
+                if (resourceObject.resourceType.name + " resource" != filter) return false // filter match
+                if (resourceObject.revealedBy == null) return true  // no need for tech
+                if (observingCiv == null) return false  // can't check tech
+                return observingCiv.tech.isResearched(resourceObject.revealedBy!!)
             }
         }
     }
