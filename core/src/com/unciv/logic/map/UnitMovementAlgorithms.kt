@@ -8,11 +8,15 @@ import com.unciv.logic.civilization.CivilizationInfo
 class UnitMovementAlgorithms(val unit:MapUnit) {
 
     // This function is called ALL THE TIME and should be as time-optimal as possible!
-    fun getMovementCostBetweenAdjacentTiles(from: TileInfo, to: TileInfo, civInfo: CivilizationInfo): Float {
+    fun getMovementCostBetweenAdjacentTiles(from: TileInfo, to: TileInfo, civInfo: CivilizationInfo, considerZoneOfControl: Boolean = true): Float {
 
         if (from.isLand != to.isLand && unit.type.isLandUnit())
             if (unit.civInfo.nation.disembarkCosts1 && from.isWater && to.isLand) return 1f
             else return 100f // this is embarkment or disembarkment, and will take the entire turn
+
+        // If the movement is affected by a Zone of Control, all movement points are expended
+        if (considerZoneOfControl && isMovementAffectedByZoneOfControl(from, to, civInfo))
+            return 100f
 
         // land units will still spend all movement points to embark even with this unique
         if (unit.allTilesCosts1)
@@ -60,6 +64,40 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
         return to.getLastTerrain().movementCost.toFloat() + extraCost // no road
     }
 
+    /** Returns whether the movement between the adjacent tiles [from] and [to] is affected by Zone of Control */
+    private fun isMovementAffectedByZoneOfControl(from: TileInfo, to: TileInfo, civInfo: CivilizationInfo): Boolean {
+        // Sources:
+        // - https://civilization.fandom.com/wiki/Zone_of_control_(Civ5)
+        // - https://forums.civfanatics.com/resources/understanding-the-zone-of-control-vanilla.25582/
+        //
+        // Enemy military units exert a Zone of Control over the tiles surrounding them. Moving from
+        // one tile in the ZoC of an enemy unit to another tile in the same unit's ZoC expends all
+        // movement points. Land units only exert a ZoC against land units. Sea units exert a ZoC
+        // against both land and sea units. Cities exert a ZoC as well, and it also affects both
+        // land and sea units. Embarked land units do not exert a ZoC. Finally, units that can move
+        // after attacking are not affected by zone of control if the movement is caused by killing
+        // a unit. This last case is handled in the movement-after-attacking code instead of here.
+        //
+        // We only need to check the two shared neighbors of [from] and [to]: the way of getting
+        // these two tiles can perhaps be optimized.
+        return from.neighbors.any{
+            (
+                (
+                    it.isCityCenter() &&
+                    civInfo.isAtWarWith(it.getOwner()!!)
+                )
+                ||
+                (
+                    it.militaryUnit != null &&
+                    civInfo.isAtWarWith(it.militaryUnit!!.civInfo) &&
+                    (it.militaryUnit!!.type.isWaterUnit() || (!it.militaryUnit!!.isEmbarked() && unit.type.isLandUnit()))
+                )
+            )
+            &&
+            to.neighbors.contains(it)
+        }
+    }
+
     class ParentTileAndTotalDistance(val parentTile: TileInfo, val totalDistance: Float)
 
     fun isUnknownTileWeShouldAssumeToBePassable(tileInfo: TileInfo) = !unit.civInfo.exploredTiles.contains(tileInfo.position)
@@ -68,7 +106,7 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
      * Does not consider if tiles can actually be entered, use canMoveTo for that.
      * If a tile can be reached within the turn, but it cannot be passed through, the total distance to it is set to unitMovement
      */
-    fun getDistanceToTilesWithinTurn(origin: Vector2, unitMovement: Float): PathsToTilesWithinTurn {
+    fun getDistanceToTilesWithinTurn(origin: Vector2, unitMovement: Float, considerZoneOfControl: Boolean = true): PathsToTilesWithinTurn {
         val distanceToTiles = PathsToTilesWithinTurn()
         if (unitMovement == 0f) return distanceToTiles
 
@@ -92,7 +130,7 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
                         // cities and units goes kaput.
 
                         else {
-                            val distanceBetweenTiles = getMovementCostBetweenAdjacentTiles(tileToCheck, neighbor, unit.civInfo)
+                            val distanceBetweenTiles = getMovementCostBetweenAdjacentTiles(tileToCheck, neighbor, unit.civInfo, considerZoneOfControl)
                             totalDistanceToTile = distanceToTiles[tileToCheck]!!.totalDistance + distanceBetweenTiles
                         }
                     } else totalDistanceToTile = distanceToTiles[tileToCheck]!!.totalDistance + 1f // If we don't know then we just guess it to be 1.
@@ -321,7 +359,7 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
         }
     }
 
-    fun moveToTile(destination: TileInfo) {
+    fun moveToTile(destination: TileInfo, considerZoneOfControl: Boolean = true) {
         if (destination == unit.getTile()) return // already here!
 
         if (unit.type.isAirUnit() || unit.type.isMissile()) { // air units move differently from all other units
@@ -348,7 +386,7 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
             return
         }
 
-        val distanceToTiles = getDistanceToTiles()
+        val distanceToTiles = getDistanceToTiles(considerZoneOfControl)
         val pathToDestination = distanceToTiles.getPathToTile(destination)
         val movableTiles = pathToDestination.takeWhile { canPassThrough(it) }
         val lastReachableTile = movableTiles.lastOrNull { canMoveTo(it) }
@@ -498,7 +536,7 @@ class UnitMovementAlgorithms(val unit:MapUnit) {
     }
 
 
-    fun getDistanceToTiles(): PathsToTilesWithinTurn = getDistanceToTilesWithinTurn(unit.currentTile.position, unit.currentMovement)
+    fun getDistanceToTiles(considerZoneOfControl: Boolean = true): PathsToTilesWithinTurn = getDistanceToTilesWithinTurn(unit.currentTile.position, unit.currentMovement, considerZoneOfControl)
 
     fun getAerialPathsToCities(): HashMap<TileInfo, ArrayList<TileInfo>> {
         var tilesToCheck = ArrayList<TileInfo>()

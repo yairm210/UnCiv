@@ -296,7 +296,11 @@ object Battle {
             // we destroyed an enemy military unit and there was a civilian unit in the same tile as well
             if (attackedTile.civilianUnit != null && attackedTile.civilianUnit!!.civInfo != attacker.getCivInfo())
                 captureCivilianUnit(attacker, MapUnitCombatant(attackedTile.civilianUnit!!))
-            attacker.unit.movement.moveToTile(attackedTile)
+            // Units that can move after attacking are not affected by zone of control if the
+            // movement is caused by killing a unit. Effectively, this means that attack movements
+            // are exempt from zone of control, since units that cannot move after attacking already
+            // lose all remaining movement points anyway.
+            attacker.unit.movement.moveToTile(attackedTile, considerZoneOfControl = false)
         }
     }
 
