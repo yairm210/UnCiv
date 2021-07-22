@@ -158,7 +158,7 @@ object UnitActions {
         if (!unit.hasUnique("Founds a new city") || tile.isWater) return null
 
         if (unit.currentMovement <= 0 || tile.getTilesInDistance(3).any { it.isCityCenter() })
-            return UnitAction(UnitActionType.FoundCity, uncivSound = UncivSound.Silent, action = null)
+            return UnitAction(UnitActionType.FoundCity, action = null)
 
         val foundAction = {
             UncivGame.Current.settings.addCompletedTutorialTask("Found city")
@@ -170,14 +170,14 @@ object UnitActions {
         }
 
         if (unit.civInfo.playerType == PlayerType.AI)
-            return UnitAction(UnitActionType.FoundCity,  uncivSound = UncivSound.Silent, action = foundAction)
+            return UnitAction(UnitActionType.FoundCity, action = foundAction)
 
         return UnitAction(
                 type = UnitActionType.FoundCity,
                 uncivSound = UncivSound.Chimes,
                 action = {
                     // check if we would be breaking a promise
-                    val leaders = TestPromiseNotToSettle(unit.civInfo, tile)
+                    val leaders = testPromiseNotToSettle(unit.civInfo, tile)
                     if (leaders == null)
                         foundAction()
                     else {
@@ -195,7 +195,7 @@ object UnitActions {
      * @param tile The tile where the new city would go
      * @return null if no promises broken, else a String listing the leader(s) we would p* off.
      */
-    private fun TestPromiseNotToSettle(civInfo: CivilizationInfo, tile: TileInfo): String? {
+    private fun testPromiseNotToSettle(civInfo: CivilizationInfo, tile: TileInfo): String? {
         val brokenPromises = HashSet<String>()
         for (otherCiv in civInfo.getKnownCivs().filter { it.isMajorCiv() && !civInfo.isAtWarWith(it) }) {
             val diplomacyManager = otherCiv.getDiplomacyManager(civInfo)
@@ -213,7 +213,6 @@ object UnitActions {
         if (unit.type.isCivilian() || !unit.promotions.canBePromoted()) return
         // promotion does not consume movement points, so we can do it always
         actionList += UnitAction(UnitActionType.Promote,
-                uncivSound = UncivSound.Promote,
                 action = {
                     UncivGame.Current.setScreen(PromotionPickerScreen(unit))
                 })
@@ -224,7 +223,6 @@ object UnitActions {
         val isSetUp = unit.action == "Set Up"
         actionList += UnitAction(UnitActionType.SetUp,
                 isCurrentAction = isSetUp,
-                uncivSound = UncivSound.Setup,
                 action = {
                     unit.action = Constants.unitActionSetUp
                     unit.useMovementPoints(1f)
@@ -253,7 +251,7 @@ object UnitActions {
 
     private fun addPillageAction(unit: MapUnit, actionList: ArrayList<UnitAction>, worldScreen: WorldScreen) {
         val pillageAction = getPillageAction(unit)
-        if (pillageAction == null) return
+            ?: return
         if (pillageAction.action == null)
             actionList += UnitAction(UnitActionType.Pillage, action = null)
         else actionList += UnitAction(type = UnitActionType.Pillage) {
@@ -270,7 +268,7 @@ object UnitActions {
 
         return UnitAction(UnitActionType.Pillage,
                 action = {
-                    // http://well-of-souls.com/civ/civ5_improvements.html says that naval improvements are destroyed upon pilllage
+                    // http://well-of-souls.com/civ/civ5_improvements.html says that naval improvements are destroyed upon pillage
                     //    and I can't find any other sources so I'll go with that
                     if (tile.isLand) {
                         tile.improvementInProgress = tile.improvement
@@ -311,23 +309,22 @@ object UnitActions {
 
         return UnitAction(UnitActionType.Upgrade,
                 title = "Upgrade to [${upgradedUnit.name}] ([$goldCostOfUpgrade] gold)",
-                uncivSound = UncivSound.Upgrade,
                 action = {
                     unit.civInfo.addGold(-goldCostOfUpgrade)
                     val unitTile = unit.getTile()
                     unit.destroy()
-                    val newunit = unit.civInfo.placeUnitNearTile(unitTile.position, upgradedUnit.name)!!
-                    newunit.health = unit.health
-                    newunit.promotions = unit.promotions
-                    newunit.instanceName = unit.instanceName
+                    val newUnit = unit.civInfo.placeUnitNearTile(unitTile.position, upgradedUnit.name)!!
+                    newUnit.health = unit.health
+                    newUnit.promotions = unit.promotions
+                    newUnit.instanceName = unit.instanceName
 
-                    for (promotion in newunit.baseUnit.promotions)
-                        if (promotion !in newunit.promotions.promotions)
-                            newunit.promotions.addPromotion(promotion, true)
+                    for (promotion in newUnit.baseUnit.promotions)
+                        if (promotion !in newUnit.promotions.promotions)
+                            newUnit.promotions.addPromotion(promotion, true)
 
-                    newunit.updateUniques()
-                    newunit.updateVisibleTiles()
-                    newunit.currentMovement = 0f
+                    newUnit.updateUniques()
+                    newUnit.updateVisibleTiles()
+                    newUnit.currentMovement = 0f
                 }.takeIf {
                     unit.civInfo.gold >= goldCostOfUpgrade && !unit.isEmbarked()
                             && unit.currentMovement == unit.getMaxMovement().toFloat()
@@ -369,7 +366,6 @@ object UnitActions {
         if (unit.currentMovement > 0) for (unique in unit.getUniques()) when (unique.placeholderText) {
             "Can hurry technology research" -> {
                 actionList += UnitAction(UnitActionType.HurryResearch,
-                    uncivSound = UncivSound.Chimes,
                     action = {
                         unit.civInfo.tech.addScience(unit.civInfo.tech.getScienceFromGreatScientist())
                         addGoldPerGreatPersonUsage(unit.civInfo)
@@ -380,7 +376,6 @@ object UnitActions {
             "Can start an []-turn golden age" -> {
                 val turnsToGoldenAge = unique.params[0].toInt()
                 actionList += UnitAction(UnitActionType.StartGoldenAge,
-                    uncivSound = UncivSound.Chimes,
                     action = {
                         unit.civInfo.goldenAges.enterGoldenAge(turnsToGoldenAge)
                         addGoldPerGreatPersonUsage(unit.civInfo)
@@ -396,7 +391,6 @@ object UnitActions {
                     else currentConstruction.isAnyWonder()
                 }
                 actionList += UnitAction(UnitActionType.HurryWonder,
-                    uncivSound = UncivSound.Chimes,
                     action = {
                         tile.getCity()!!.cityConstructions.apply {
                             addProductionPoints(300 + 30 * tile.getCity()!!.population.population) //http://civilization.wikia.com/wiki/Great_engineer_(Civ5)
@@ -412,7 +406,6 @@ object UnitActions {
                         && tile.owningCity?.civInfo?.isAtWarWith(unit.civInfo) == false
                 val influenceEarned = unique.params[0].toInt()
                 actionList += UnitAction(UnitActionType.ConductTradeMission,
-                    uncivSound = UncivSound.Chimes,
                     action = {
                         // http://civilization.wikia.com/wiki/Great_Merchant_(Civ5)
                         var goldEarned = ((350 + 50 * unit.civInfo.getEraNumber()) * unit.civInfo.gameInfo.gameParameters.gameSpeed.modifier).toInt()
@@ -434,7 +427,6 @@ object UnitActions {
         if (!unit.hasUnique("May found a religion")) return // should later also include enhance religion
         if (!unit.civInfo.religionManager.mayUseGreatProphetAtAll(unit)) return
         actionList += UnitAction(UnitActionType.FoundReligion,
-            uncivSound = UncivSound.Choir,
             action = {
                 addGoldPerGreatPersonUsage(unit.civInfo)
                 unit.civInfo.religionManager.useGreatProphet(unit)
@@ -452,7 +444,6 @@ object UnitActions {
         val city = tile.getCity()
         actionList += UnitAction(UnitActionType.SpreadReligion,
             title = "Spread [${unit.religion!!}]",
-            uncivSound = UncivSound.Choir,
             action = {
                 unit.abilityUsedCount["Religion Spread"] = unit.abilityUsedCount["Religion Spread"]!! + 1
                 city!!.religion[unit.religion!!] = 100
@@ -473,10 +464,9 @@ object UnitActions {
         for (unique in uniquesToCheck) {
             val improvementName = unique.params[0]
             val improvement = tile.ruleset.tileImprovements[improvementName]
-            if (improvement == null) continue
+                ?: continue
             finalActions += UnitAction(UnitActionType.Create,
                 title = "Create [$improvementName]",
-                uncivSound = UncivSound.Chimes,
                 action = {
                     val unitTile = unit.getTile()
                     for (terrainFeature in tile.terrainFeatures.filter { unitTile.ruleset.tileImprovements.containsKey("Remove $it") })
@@ -577,14 +567,12 @@ object UnitActions {
 
         if (isDamaged && !showingAdditionalActions)
             actionList += UnitAction(UnitActionType.FortifyUntilHealed,
-            title = UnitActionType.FortifyUntilHealed.value,
             action = {
                 unit.fortifyUntilHealed()
             }.takeIf { !unit.isFortifyingUntilHealed() }
         )
         else if (isDamaged || !showingAdditionalActions)
             actionList += UnitAction(UnitActionType.Fortify,
-            uncivSound = UncivSound.Fortify,
             action = {
                 unit.fortify()
             }.takeIf { !isFortified }
@@ -632,7 +620,7 @@ object UnitActions {
         // We need to be in another civs territory.
         if (recipient == null || recipient.isCurrentPlayer()) return null
 
-        // City States only take miliary units (and GPs for certain civs)
+        // City States only take military units (and GPs for certain civs)
         if (recipient.isCityState()) {
             if (unit.isGreatPerson()) {
                 // Do we have a unique ability to gift GPs?
@@ -645,7 +633,7 @@ object UnitActions {
         else if (!tile.isFriendlyTerritory(unit.civInfo)) return null
 
         if (unit.currentMovement <= 0)
-            return UnitAction(UnitActionType.GiftUnit, uncivSound = UncivSound.Silent, action = null)
+            return UnitAction(UnitActionType.GiftUnit, action = null)
 
         val giftAction = {
             if (recipient.isCityState()) {
@@ -669,12 +657,12 @@ object UnitActions {
             UncivGame.Current.worldScreen.shouldUpdate = true
         }
 
-        return UnitAction(UnitActionType.GiftUnit, uncivSound = UncivSound.Silent, action = giftAction)
+        return UnitAction(UnitActionType.GiftUnit, action = giftAction)
     }
 
     private fun addToggleActionsAction(unit: MapUnit, actionList: ArrayList<UnitAction>, unitTable: UnitTable) {
-        actionList += UnitAction(UnitActionType.ShowAdditionalActions,
-            title = if (unit.showAdditionalActions) "Back" else "Show more",
+        actionList += UnitAction(
+            type = if (unit.showAdditionalActions) UnitActionType.HideAdditionalActions else UnitActionType.ShowAdditionalActions,
             action = {
                 unit.showAdditionalActions = !unit.showAdditionalActions
                 unitTable.update()

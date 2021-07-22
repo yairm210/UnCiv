@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.*
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Align
+import com.unciv.models.translations.tr
 
 /**
  * A **Replacement** for Gdx [Tooltip], placement does not follow the mouse.
@@ -180,7 +181,8 @@ class UncivTooltip <T: Actor>(
             addListener(UncivTooltip(this,
                 labelWithBackground,
                 forceContentSize = Vector2(size * widthHeightRatio, size),
-                offset = Vector2(size/4, 0f)
+                offset = Vector2(-size/4, size/4),
+                tipAlign = Align.top
             ))
         }
 
@@ -196,10 +198,17 @@ class UncivTooltip <T: Actor>(
             addTooltip((if (char in "Ii") 'i' else char.toUpperCase()).toString(), size, always)
         }
 
-/* unused - template in case we need it - problem: how exactly to handle translation?
+        /**
+         * Add a [Label]-based Tooltip for a keyboard binding with a rounded-corner background to a [Table] or other [Group].
+         *
+         * Tip is positioned over top right corner, slightly overshooting the receiver widget.
+         *
+         * @param size _Vertical_ size of the entire Tooltip including background
+         * @param always override requirement: presence of physical keyboard
+         */
         fun Group.addTooltip(key: KeyCharAndCode, size: Float = 26f, always: Boolean = false) {
-            addTooltip(key.toString(), size, always)
+            if (key != KeyCharAndCode.UNKNOWN)
+                addTooltip(key.toString().tr(), size, always)
         }
-*/
     }
 }

@@ -35,9 +35,14 @@ data class KeyCharAndCode(val char: Char, val code: Int) {
     // From Kotlin 1.5? on the Ctrl- line will need Char(char.code+64)
     // see https://github.com/Kotlin/KEEP/blob/master/proposals/stdlib/char-int-conversions.md
     override fun toString(): String {
-        // debug helper
+        // debug helper, but also used for tooltips
+        fun fixedKeysToString(code: Int) = when (code) {
+            Input.Keys.BACKSPACE -> "Backspace"  // Gdx displaying this as "Delete" is Bullshit!
+            Input.Keys.FORWARD_DEL -> "Del"      // Likewise
+            else -> Input.Keys.toString(code)
+        }
         return when {
-            char == Char.MIN_VALUE -> Input.Keys.toString(code)
+            char == Char.MIN_VALUE -> fixedKeysToString(code)
             this == ESC -> "ESC"
             char < ' ' -> "Ctrl-" + (char.toInt()+64).toChar()
             else -> "\"$char\""
@@ -51,8 +56,8 @@ data class KeyCharAndCode(val char: Char, val code: Int) {
         val RETURN = KeyCharAndCode(Input.Keys.ENTER)
         val NUMPAD_ENTER = KeyCharAndCode(Input.Keys.NUMPAD_ENTER)
         val SPACE = KeyCharAndCode(Input.Keys.SPACE)
-        val DEL = KeyCharAndCode(Input.Keys.DEL)
-        val FORWARD_DEL = KeyCharAndCode(Input.Keys.FORWARD_DEL)    // this is what I see for both 'Del' keys
+        val BACKSPACE= KeyCharAndCode(Input.Keys.BACKSPACE)
+        val DEL = KeyCharAndCode(Input.Keys.FORWARD_DEL)        // Gdx "DEL" is just plain wrong!
         /** Guaranteed to be ignored by [KeyPressDispatcher.set] and never to be generated for an actual event, used as fallback to ensure no action is taken */
         val UNKNOWN = KeyCharAndCode(Input.Keys.UNKNOWN)
 
@@ -116,9 +121,6 @@ class KeyPressDispatcher(val name: String? = null) : HashMap<KeyCharAndCode, (()
         // Likewise always match Back to ESC
         if (key == KeyCharAndCode.BACK)
             super.put(KeyCharAndCode.ESC, action)
-        // And make two codes for DEL equivalent
-        if (key == KeyCharAndCode.DEL)
-            super.put(KeyCharAndCode.FORWARD_DEL, action)
         checkInstall()
     }
     override fun remove(key: KeyCharAndCode): (() -> Unit)? {
@@ -128,8 +130,6 @@ class KeyPressDispatcher(val name: String? = null) : HashMap<KeyCharAndCode, (()
             super.remove(KeyCharAndCode.NUMPAD_ENTER)
         if (key == KeyCharAndCode.BACK)
             super.remove(KeyCharAndCode.ESC)
-        if (key == KeyCharAndCode.DEL)
-            super.remove(KeyCharAndCode.FORWARD_DEL)
         checkInstall()
         return result
     }
